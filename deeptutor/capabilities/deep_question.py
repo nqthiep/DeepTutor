@@ -159,13 +159,13 @@ class DeepQuestionCapability(BaseCapability):
         else:
             if not topic:
                 await stream.error(
-                    "Topic is required for custom question generation.", source=self.name
+                    "Cần chủ đề để tạo câu hỏi tùy chỉnh.", source=self.name
                 )
                 return
 
             async with stream.stage("ideation", source=self.name):
                 await stream.thinking(
-                    "Generating question templates...", source=self.name, stage="ideation"
+                    "Đang tạo mẫu câu hỏi...", source=self.name, stage="ideation"
                 )
 
             result = await coordinator.generate_from_topic(
@@ -183,7 +183,7 @@ class DeepQuestionCapability(BaseCapability):
             await stream.content(content, source=self.name, stage="generation")
 
         result_payload: dict[str, Any] = {
-            "response": content or "No questions generated.",
+            "response": content or "Không có câu hỏi nào được tạo.",
             "summary": result,
             "mode": mode,
         }
@@ -290,7 +290,7 @@ class DeepQuestionCapability(BaseCapability):
             await stream.content(body, source=self.name, stage="generation")
 
         result_payload: dict[str, Any] = {
-            "response": body or "No questions generated.",
+            "response": body or "Không có câu hỏi nào được tạo.",
             "summary": summary,
             "mode": "answer_now",
             "metadata": {"answer_now": True},
@@ -330,7 +330,7 @@ class DeepQuestionCapability(BaseCapability):
                     "question": raw[:500],
                     "question_type": "written",
                     "correct_answer": "",
-                    "explanation": "Model returned unparseable JSON during answer-now.",
+                    "explanation": "Mô hình trả về JSON không thể phân tích trong quá trình answer-now.",
                 }
             ]
 
@@ -381,7 +381,7 @@ class DeepQuestionCapability(BaseCapability):
         if pdf_attachment and pdf_attachment.base64:
             async with stream.stage("ideation", source=self.name):
                 await stream.thinking(
-                    "Parsing uploaded exam paper and extracting templates...",
+                    "Đang phân tích đề thi đã tải lên và trích xuất mẫu...",
                     source=self.name,
                     stage="ideation",
                 )
@@ -401,7 +401,7 @@ class DeepQuestionCapability(BaseCapability):
         if paper_path:
             async with stream.stage("ideation", source=self.name):
                 await stream.thinking(
-                    "Loading parsed exam paper and extracting templates...",
+                    "Đang tải đề thi đã phân tích và trích xuất mẫu...",
                     source=self.name,
                     stage="ideation",
                 )
@@ -417,7 +417,7 @@ class DeepQuestionCapability(BaseCapability):
         if "[Attached Documents]" in context.user_message:
             async with stream.stage("ideation", source=self.name):
                 await stream.thinking(
-                    "Using extracted attachment text as the quiz source...",
+                    "Đang sử dụng văn bản tệp đính kèm làm nguồn câu hỏi...",
                     source=self.name,
                     stage="ideation",
                 )
@@ -435,7 +435,7 @@ class DeepQuestionCapability(BaseCapability):
             )
 
         await stream.error(
-            "Mimic mode requires either an uploaded PDF or a parsed exam directory.",
+            "Chế độ mô phỏng yêu cầu tệp PDF đã tải lên hoặc thư mục đề thi đã phân tích.",
             source=self.name,
         )
         return {}
@@ -466,9 +466,9 @@ class DeepQuestionCapability(BaseCapability):
             batch = update.get("batch", "")
             templates = update.get("templates", [])
             prefix = (
-                f"Templates ready (batch {batch}): {count}"
+                f"Mẫu đã sẵn sàng (batch {batch}): {count}"
                 if batch
-                else f"Templates ready: {count}"
+                else f"Mẫu đã sẵn sàng: {count}"
             )
             lines = [prefix]
             for t in templates:
@@ -483,7 +483,7 @@ class DeepQuestionCapability(BaseCapability):
             qid = DeepQuestionCapability._humanize_question_id(update.get("question_id", ""))
             current = update.get("current", "")
             total = update.get("total", "")
-            return f"Generating {qid} ({current}/{total})"
+            return f"Đang tạo {qid} ({current}/{total})"
 
         if update_type == "result":
             qid = DeepQuestionCapability._humanize_question_id(update.get("question_id", ""))
@@ -495,7 +495,7 @@ class DeepQuestionCapability(BaseCapability):
             ordinal = ""
             if isinstance(idx, int):
                 ordinal = f"#{idx + 1}, "
-            return f"{qid} done ({ordinal}{qt}/{diff}, success={success})"
+            return f"{qid} xong ({ordinal}{qt}/{diff}, success={success})"
 
         return update.get("message", update_type)
 
@@ -603,7 +603,7 @@ class DeepQuestionCapability(BaseCapability):
                     return
                 if state == "error":
                     await stream.error(
-                        str(update.get("response", "") or "LLM call failed."),
+                        str(update.get("response", "") or "Gọi LLM thất bại."),
                         source=self.name,
                         stage=stage,
                         metadata=merge_trace_metadata(

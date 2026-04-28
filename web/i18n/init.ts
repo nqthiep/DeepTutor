@@ -3,13 +3,15 @@ import { initReactI18next } from "react-i18next";
 
 import enApp from "@/locales/en/app.json";
 import zhApp from "@/locales/zh/app.json";
+import viApp from "@/locales/vi/app.json";
 
-export type AppLanguage = "en" | "zh";
+export type AppLanguage = "en" | "zh" | "vi";
 
 export function normalizeLanguage(lang: unknown): AppLanguage {
   if (!lang) return "en";
   const s = String(lang).toLowerCase();
   if (s === "zh" || s === "cn" || s === "chinese") return "zh";
+  if (s === "vi" || s === "vn" || s === "vietnamese") return "vi";
   return "en";
 }
 
@@ -21,6 +23,7 @@ export function initI18n(language?: unknown) {
   const resources: Resource = {
     en: { app: enApp },
     zh: { app: zhApp },
+    vi: { app: viApp },
   };
 
   i18n.use(initReactI18next).init({

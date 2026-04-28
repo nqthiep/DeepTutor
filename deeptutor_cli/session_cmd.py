@@ -61,7 +61,7 @@ async def _show_session(session_id: str, fmt: str) -> None:
     client = DeepTutorApp()
     session = await client.get_session(session_id)
     if session is None:
-        console.print(f"[red]Session not found:[/] {session_id}")
+        console.print(f"[red]Không tìm thấy phiên:[/] {session_id}")
         raise typer.Exit(code=1)
 
     if fmt == "json":
@@ -87,15 +87,15 @@ async def _delete_session(session_id: str) -> None:
     client = DeepTutorApp()
     success = await client.delete_session(session_id)
     if not success:
-        console.print(f"[red]Session not found:[/] {session_id}")
+        console.print(f"[red]Không tìm thấy phiên:[/] {session_id}")
         raise typer.Exit(code=1)
-    console.print(f"Deleted session {session_id}")
+    console.print(f"Đã xóa phiên {session_id}")
 
 
 async def _rename_session(session_id: str, title: str) -> None:
     client = DeepTutorApp()
     success = await client.rename_session(session_id, title)
     if not success:
-        console.print(f"[red]Session not found:[/] {session_id}")
+        console.print(f"[red]Không tìm thấy phiên:[/] {session_id}")
         raise typer.Exit(code=1)
-    console.print(f"Renamed {session_id} -> {title}")
+    console.print(f"Đã đổi tên {session_id} -> {title}")

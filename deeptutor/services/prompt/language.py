@@ -20,6 +20,7 @@ _LANGUAGE_LABELS: dict[str, str] = {
     "ru": "Русский",
     "pt": "Português",
     "it": "Italiano",
+    "vi": "Tiếng Việt",
 }
 
 
@@ -55,6 +56,15 @@ def language_directive(language: str | None) -> str:
             "JSON keys, or examples in this prompt are in another language. "
             "Keep proper nouns (people, products, formula symbols) in their "
             "original form."
+        )
+    if code == "vi":
+        return (
+            "\n\n[Yêu cầu Ngôn ngữ / Language] "
+            "Hãy viết TẤT CẢ văn bản hướng tới người đọc (tiêu đề, bài viết, "
+            "giải thích, gợi ý, chuyển tiếp, đề bài trắc nghiệm, lựa chọn, v.v.) "
+            "bằng Tiếng Việt. KHÔNG chuyển đổi ngôn ngữ ngay cả khi tài liệu nguồn, "
+            "khóa JSON hoặc ví dụ trong prompt này bằng ngôn ngữ khác. "
+            "Giữ nguyên các danh từ riêng (tên người, sản phẩm, ký hiệu công thức)."
         )
     return (
         f"\n\n[Language] Write ALL reader-facing text strictly in {label}. "

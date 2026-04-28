@@ -36,15 +36,15 @@ def register(app: typer.Typer) -> None:
                 if content:
                     console.print(Panel(Markdown(content), title=f"[bold]{label}.md[/]"))
                 else:
-                    console.print(f"[dim]{label}.md: (empty)[/]")
+                    console.print(f"[dim]{label}.md: (rỗng)[/]")
         elif file in ("summary", "profile"):
             content = svc.read_file(cast(MemoryFile, file))
             if content:
                 console.print(Panel(Markdown(content), title=f"[bold]{file.upper()}.md[/]"))
             else:
-                console.print(f"[dim]{file.upper()}.md: (empty)[/]")
+                console.print(f"[dim]{file.upper()}.md: (rỗng)[/]")
         else:
-            console.print(f"[red]Unknown file: {file}. Use summary, profile, or all.[/]")
+            console.print(f"[red]Tệp không xác định: {file}. Sử dụng summary, profile hoặc all.[/]")
 
     @app.command("clear")
     def memory_clear(
@@ -57,17 +57,17 @@ def register(app: typer.Typer) -> None:
         """Clear memory file(s)."""
         svc = get_memory_service()
         if file not in ("summary", "profile", "all"):
-            console.print(f"[red]Unknown file: {file}[/]")
+            console.print(f"[red]Tệp không xác định: {file}[/]")
             raise typer.Exit(1)
 
         if not force:
-            target = "all memory files" if file == "all" else f"{file.upper()}.md"
-            if not typer.confirm(f"Clear {target}?"):
+            target = "tất cả tệp bộ nhớ" if file == "all" else f"{file.upper()}.md"
+            if not typer.confirm(f"Xóa {target}?"):
                 raise typer.Abort()
 
         if file == "all":
             svc.clear_memory()
-            console.print("[green]Cleared all memory files.[/]")
+            console.print("[green]Đã xóa tất cả tệp bộ nhớ.[/]")
         else:
             svc.clear_file(cast(MemoryFile, file))
-            console.print(f"[green]Cleared {file.upper()}.md.[/]")
+            console.print(f"[green]Đã xóa {file.upper()}.md.[/]")

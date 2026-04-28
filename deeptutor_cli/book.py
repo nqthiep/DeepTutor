@@ -22,7 +22,7 @@ def register(app: typer.Typer) -> None:
         engine = get_book_engine()
         books = engine.list_books()
         if not books:
-            console.print("[yellow]No books yet.[/yellow]")
+            console.print("[yellow]Chưa có sách nào.[/yellow]")
             return
         for book in books:
             stale = len(book.stale_page_ids or [])
@@ -56,6 +56,6 @@ def register(app: typer.Typer) -> None:
         engine = get_book_engine()
         result = engine.refresh_kb_fingerprints(book_id)
         if result is None:
-            console.print(f"[red]Book {book_id} not found.[/red]")
+            console.print(f"[red]Không tìm thấy sách {book_id}.[/red]")
             raise typer.Exit(code=1)
         console.print_json(json.dumps(result))

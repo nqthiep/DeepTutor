@@ -64,9 +64,9 @@ class DeepResearchCapability(BaseCapability):
             )
             await stream.progress(
                 message=(
-                    "Knowledge base source was selected, but no knowledge "
-                    "base is attached; KB retrieval is disabled for this "
-                    "research run."
+                    "Nguồn cơ sở tri thức đã được chọn, nhưng không có cơ sở "
+                    "tri thức nào được đính kèm; truy xuất KB bị vô hiệu hóa "
+                    "trong lần nghiên cứu này."
                 ),
                 source=self.name,
                 stage="rephrasing",
@@ -74,9 +74,8 @@ class DeepResearchCapability(BaseCapability):
             )
             if not request_config.sources:
                 await stream.error(
-                    "Deep research requires at least one source. Please "
-                    "either attach a knowledge base or enable web/papers "
-                    "sources.",
+                    "Nghiên cứu sâu yêu cầu ít nhất một nguồn. Vui lòng đính "
+                    "kèm cơ sở tri thức hoặc bật nguồn web/tài liệu.",
                     source=self.name,
                 )
                 return
@@ -119,18 +118,18 @@ class DeepResearchCapability(BaseCapability):
         def _progress_message(data: dict[str, Any]) -> str:
             status = str(data.get("status") or data.get("type") or "").strip()
             pretty_map = {
-                "planning_started": "Clarifying the research question",
-                "rephrase_completed": "Refined the research focus",
-                "rephrase_skipped": "Using the original topic directly",
-                "decompose_started": "Breaking the topic into subtopics",
-                "decompose_completed": "Prepared subtopics for investigation",
-                "queue_seeded": "Queued a research subtopic",
-                "researching_started": "Searching for evidence",
-                "block_started": "Investigating a subtopic",
-                "block_completed": "Completed one evidence block",
-                "researching_completed": "Evidence gathering finished",
-                "reporting_started": "Drafting the final result",
-                "reporting_completed": "Final result is ready",
+                "planning_started": "Đang làm rõ câu hỏi nghiên cứu",
+                "rephrase_completed": "Đã tinh chỉnh trọng tâm nghiên cứu",
+                "rephrase_skipped": "Đang sử dụng chủ đề gốc trực tiếp",
+                "decompose_started": "Đang chia chủ đề thành các chủ đề con",
+                "decompose_completed": "Đã chuẩn bị chủ đề con để nghiên cứu",
+                "queue_seeded": "Đã xếp hàng chủ đề con nghiên cứu",
+                "researching_started": "Đang tìm kiếm bằng chứng",
+                "block_started": "Đang nghiên cứu một chủ đề con",
+                "block_completed": "Đã hoàn thành một khối bằng chứng",
+                "researching_completed": "Đã thu thập xong bằng chứng",
+                "reporting_started": "Đang soạn thảo kết quả cuối cùng",
+                "reporting_completed": "Kết quả cuối cùng đã sẵn sàng",
             }
             return pretty_map.get(
                 status,
@@ -173,22 +172,22 @@ class DeepResearchCapability(BaseCapability):
             iteration = update.get("iteration")
 
             if agent_name == "rephrase_agent":
-                return "Rephrase topic"
+                return "Diễn đạt lại chủ đề"
             if agent_name == "decompose_agent":
-                return "Decompose topic"
+                return "Phân tích chủ đề"
             if agent_name == "note_agent":
-                return "Summarize evidence"
+                return "Tóm tắt bằng chứng"
             if stage == "reporting":
                 if raw_stage == "generate_outline":
-                    return "Generate outline"
+                    return "Tạo dàn bài"
                 if raw_stage.startswith("write_"):
-                    return "Write report"
-                return "Reporting"
+                    return "Viết báo cáo"
+                return "Đang báo cáo"
             if block_id and isinstance(iteration, int):
                 return f"{block_id.replace('_', ' ').title()} · Round {iteration}"
             if block_id:
                 return block_id.replace("_", " ").title()
-            return "Research step"
+            return "Bước nghiên cứu"
 
         async def _trace_cb(update: dict[str, Any]) -> None:
             event = str(update.get("event", "") or "")
@@ -261,7 +260,7 @@ class DeepResearchCapability(BaseCapability):
                     return
                 if state == "error":
                     await stream.error(
-                        str(update.get("response", "") or "LLM call failed."),
+                        str(update.get("response", "") or "Gọi LLM thất bại."),
                         source=self.name,
                         stage=stage,
                         metadata=merge_trace_metadata(
@@ -379,7 +378,7 @@ class DeepResearchCapability(BaseCapability):
 
         async with stream.stage("researching", source=self.name):
             await stream.thinking(
-                f"Researching topic: {topic}", source=self.name, stage="researching"
+                f"Đang nghiên cứu chủ đề: {topic}", source=self.name, stage="researching"
             )
             result = await pipeline.run(topic=topic)
 
@@ -503,7 +502,7 @@ class DeepResearchCapability(BaseCapability):
 
         async with stream.stage("decomposing", source=self.name):
             await stream.thinking(
-                f"Generating research outline for: {topic}",
+                f"Đang tạo dàn bài nghiên cứu cho: {topic}",
                 source=self.name,
                 stage="decomposing",
             )

@@ -70,7 +70,7 @@ def register(app: typer.Typer) -> None:
             if fmt == "json":
                 console.print_json("[]")
             else:
-                console.print("[dim]No knowledge bases found.[/]")
+                console.print("[dim]Không tìm thấy cơ sở tri thức nào.[/]")
             return
 
         if fmt == "json":
@@ -93,7 +93,7 @@ def register(app: typer.Typer) -> None:
             console.print_json(json.dumps(items, ensure_ascii=False, default=str))
             return
 
-        table = Table(title="Knowledge Bases")
+        table = Table(title="Cơ sở tri thức")
         table.add_column("Name", style="bold")
         table.add_column("Status")
         table.add_column("Documents", justify="right")
@@ -121,7 +121,7 @@ def register(app: typer.Typer) -> None:
         try:
             info = mgr.get_info(name)
         except Exception as exc:
-            console.print(f"[red]Knowledge base '{name}' not found: {exc}[/]")
+            console.print(f"[red]Không tìm thấy cơ sở tri thức '{name}': {exc}[/]")
             raise typer.Exit(code=1) from exc
         console.print_json(json.dumps(info, indent=2, ensure_ascii=False, default=str))
 
@@ -132,9 +132,9 @@ def register(app: typer.Typer) -> None:
         try:
             mgr.set_default(name)
         except Exception as exc:
-            console.print(f"[red]Failed to set default KB '{name}': {exc}[/]")
+            console.print(f"[red]Không thể đặt KB mặc định '{name}': {exc}[/]")
             raise typer.Exit(code=1) from exc
-        console.print(f"[green]Set '{name}' as default knowledge base.[/]")
+        console.print(f"[green]Đã đặt '{name}' làm cơ sở tri thức mặc định.[/]")
 
     @app.command("create")
     def kb_create(
@@ -151,7 +151,7 @@ def register(app: typer.Typer) -> None:
             raise typer.Exit(code=1) from exc
 
         if name in mgr.list_knowledge_bases():
-            console.print(f"[red]Knowledge base '{name}' already exists.[/]")
+            console.print(f"[red]Cơ sở tri thức '{name}' đã tồn tại.[/]")
             raise typer.Exit(code=1)
 
         try:
@@ -161,11 +161,11 @@ def register(app: typer.Typer) -> None:
             raise typer.Exit(code=1) from exc
 
         if not doc_paths:
-            console.print("[red]Provide at least one supported document (--doc or --docs-dir).[/]")
+            console.print("[red]Cung cấp ít nhất một tài liệu được hỗ trợ (--doc hoặc --docs-dir).[/]")
             raise typer.Exit(code=1)
 
         console.print(
-            f"Creating KB [bold]{name}[/] with {len(doc_paths)} document(s) via [bold]LlamaIndex[/]..."
+            f"Đang tạo KB [bold]{name}[/] với {len(doc_paths)} tài liệu qua [bold]LlamaIndex[/]..."
         )
         from deeptutor.knowledge.initializer import initialize_knowledge_base
 
@@ -179,9 +179,9 @@ def register(app: typer.Typer) -> None:
                 )
             )
         except Exception as exc:
-            console.print(f"[red]KB creation failed: {exc}[/]")
+            console.print(f"[red]Tạo KB thất bại: {exc}[/]")
             raise typer.Exit(code=1) from exc
-        console.print("[green]Knowledge base created successfully.[/]")
+        console.print("[green]Đã tạo cơ sở tri thức thành công.[/]")
 
     @app.command("add")
     def kb_add(
@@ -192,7 +192,7 @@ def register(app: typer.Typer) -> None:
         """Add documents to an existing knowledge base."""
         mgr = _get_kb_manager()
         if name not in mgr.list_knowledge_bases():
-            console.print(f"[red]Knowledge base '{name}' not found.[/]")
+            console.print(f"[red]Không tìm thấy cơ sở tri thức '{name}'.[/]")
             raise typer.Exit(code=1)
 
         try:
@@ -202,10 +202,10 @@ def register(app: typer.Typer) -> None:
             raise typer.Exit(code=1) from exc
 
         if not doc_paths:
-            console.print("[red]Provide at least one supported document.[/]")
+            console.print("[red]Cung cấp ít nhất một tài liệu được hỗ trợ.[/]")
             raise typer.Exit(code=1)
 
-        console.print(f"Adding {len(doc_paths)} document(s) to [bold]{name}[/]...")
+        console.print(f"Đang thêm {len(doc_paths)} tài liệu vào [bold]{name}[/]...")
         from deeptutor.knowledge.add_documents import add_documents
 
         try:
@@ -218,13 +218,13 @@ def register(app: typer.Typer) -> None:
                 )
             )
         except Exception as exc:
-            console.print(f"[red]Document upload failed: {exc}[/]")
+            console.print(f"[red]Tải tài liệu lên thất bại: {exc}[/]")
             raise typer.Exit(code=1) from exc
 
         if processed_count:
-            console.print(f"[green]Done. Indexed {processed_count} document(s).[/]")
+            console.print(f"[green]Hoàn tất. Đã lập chỉ mục {processed_count} tài liệu.[/]")
         else:
-            console.print("[yellow]No new unique documents were indexed.[/]")
+            console.print("[yellow]Không có tài liệu duy nhất mới nào được lập chỉ mục.[/]")
 
     @app.command("delete")
     def kb_delete(
@@ -233,7 +233,7 @@ def register(app: typer.Typer) -> None:
     ) -> None:
         """Delete a knowledge base."""
         if not force:
-            confirm = typer.confirm(f"Delete knowledge base '{name}'?")
+            confirm = typer.confirm(f"Xóa cơ sở tri thức '{name}'?")
             if not confirm:
                 raise typer.Abort()
 
@@ -241,13 +241,13 @@ def register(app: typer.Typer) -> None:
         try:
             deleted = mgr.delete_knowledge_base(name, confirm=True)
         except Exception as exc:
-            console.print(f"[red]Failed to delete '{name}': {exc}[/]")
+            console.print(f"[red]Không thể xóa '{name}': {exc}[/]")
             raise typer.Exit(code=1) from exc
 
         if deleted:
-            console.print(f"[green]Deleted '{name}'.[/]")
+            console.print(f"[green]Đã xóa '{name}'.[/]")
         else:
-            console.print(f"[yellow]Knowledge base '{name}' was not deleted.[/]")
+            console.print(f"[yellow]Cơ sở tri thức '{name}' không bị xóa.[/]")
 
     @app.command("search")
     def kb_search(
@@ -274,7 +274,7 @@ def register(app: typer.Typer) -> None:
                 )
             )
         except Exception as exc:
-            console.print(f"[red]Search failed: {exc}[/]")
+            console.print(f"[red]Tìm kiếm thất bại: {exc}[/]")
             raise typer.Exit(code=1) from exc
 
         if fmt == "json":

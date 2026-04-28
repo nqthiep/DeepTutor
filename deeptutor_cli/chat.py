@@ -59,7 +59,7 @@ async def _chat_repl(state: ChatState) -> None:
     if state.session_id:
         existing = await client.get_session(state.session_id)
         if existing is None:
-            console.print(f"[red]Session not found:[/] {state.session_id}")
+            console.print(f"[red]Không tìm thấy phiên:[/] {state.session_id}")
             raise typer.Exit(code=1)
         preferences = existing.get("preferences", {}) or {}
         state.capability = str(preferences.get("capability") or state.capability or "chat")
@@ -76,12 +76,12 @@ async def _chat_repl(state: ChatState) -> None:
     console.print(
         Panel(
             "[bold]DeepTutor CLI[/]\n"
-            "Type a message to chat. Commands:\n"
+            "Nhập tin nhắn để trò chuyện. Lệnh:\n"
             "  /quit  /session  /new\n"
-            "  /regenerate (alias /retry) — re-run the last user message\n"
-            "  /tool on|off <name>\n"
-            "  /cap <name>\n"
-            "  /kb <name>|none\n"
+            "  /regenerate (bí danh /retry) — chạy lại tin nhắn cuối\n"
+            "  /tool on|off <tên>\n"
+            "  /cap <tên>\n"
+            "  /kb <tên>|none\n"
             "  /history add <id> | /history clear\n"
             "  /notebook add <ref> | /notebook clear\n"
             "  /refs  /config show|set|clear",
@@ -103,7 +103,7 @@ async def _chat_repl(state: ChatState) -> None:
             command = user_input.split(maxsplit=1)[0].lower()
             if command in {"/regenerate", "/retry"}:
                 if not state.session_id:
-                    console.print("[yellow]No active session yet — send a message first.[/]")
+                    console.print("[yellow]Chưa có phiên hoạt động — hãy gửi tin nhắn trước.[/]")
                     continue
                 result = await regenerate_and_render(
                     app=client,
@@ -145,7 +145,7 @@ def _apply_command(raw: str, state: ChatState) -> bool:
         return True
     if command == "/new":
         state.session_id = None
-        console.print("[dim]Started a new chat context.[/]")
+        console.print("[dim]Đã bắt đầu ngữ cảnh trò chuyện mới.[/]")
         return True
     if command == "/refs":
         _print_state(state)
@@ -194,7 +194,7 @@ def _apply_command(raw: str, state: ChatState) -> bool:
         _print_state(state)
         return True
 
-    console.print("[dim]Unknown command.[/]")
+    console.print("[dim]Lệnh không xác định.[/]")
     return True
 
 

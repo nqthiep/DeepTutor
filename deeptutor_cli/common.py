@@ -21,7 +21,7 @@ def parse_config_items(items: list[str]) -> dict[str, Any]:
     for item in items:
         key, sep, raw_value = item.partition("=")
         if not sep or not key.strip():
-            raise ValueError(f"Invalid --config item `{item}`. Expected KEY=VALUE.")
+            raise ValueError(f"Mục --config không hợp lệ `{item}`. Định dạng KEY=VALUE.")
         config[key.strip()] = _parse_scalar_value(raw_value.strip())
     return config
 
@@ -180,7 +180,7 @@ def maybe_run(coro):  # noqa: ANN001
 
 
 def print_session_table(sessions: list[dict[str, Any]]) -> None:
-    table = Table(title="Sessions")
+    table = Table(title="Phiên")
     table.add_column("ID")
     table.add_column("Title")
     table.add_column("Capability")
@@ -198,7 +198,7 @@ def print_session_table(sessions: list[dict[str, Any]]) -> None:
 
 
 def print_notebook_table(notebooks: list[dict[str, Any]]) -> None:
-    table = Table(title="Notebooks")
+    table = Table(title="Sổ tay")
     table.add_column("ID")
     table.add_column("Name")
     table.add_column("Records", justify="right")

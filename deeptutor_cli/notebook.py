@@ -39,7 +39,7 @@ def register(app: typer.Typer) -> None:
         client = DeepTutorApp()
         notebook = client.get_notebook(notebook_id)
         if notebook is None:
-            console.print(f"[red]Notebook not found:[/] {notebook_id}")
+            console.print(f"[red]Không tìm thấy sổ tay:[/] {notebook_id}")
             raise typer.Exit(code=1)
         if fmt == "json":
             console.print(json.dumps(notebook, ensure_ascii=False, indent=2, default=str))
@@ -62,9 +62,9 @@ def register(app: typer.Typer) -> None:
         client = DeepTutorApp()
         success = client.remove_record(notebook_id, record_id)
         if not success:
-            console.print(f"[red]Record not found:[/] {record_id}")
+            console.print(f"[red]Không tìm thấy bản ghi:[/] {record_id}")
             raise typer.Exit(code=1)
-        console.print(f"Removed record {record_id} from notebook {notebook_id}")
+        console.print(f"Đã xóa bản ghi {record_id} khỏi sổ tay {notebook_id}")
 
     @app.command("add-md")
     def add_md(
@@ -80,7 +80,7 @@ def register(app: typer.Typer) -> None:
         """Add a markdown file as a record to a notebook."""
         path = Path(file_path)
         if not path.exists():
-            console.print(f"[red]File not found:[/] {file_path}")
+            console.print(f"[red]Không tìm thấy tệp:[/] {file_path}")
             raise typer.Exit(code=1)
 
         content = path.read_text(encoding="utf-8")
@@ -96,8 +96,8 @@ def register(app: typer.Typer) -> None:
         )
         record = result.get("record", {})
         console.print(
-            f"[green]Added record[/] {record.get('id', '')} "
-            f"to notebook {notebook_id}: {record_title}"
+            f"[green]Đã thêm bản ghi[/] {record.get('id', '')} "
+            f"vào sổ tay {notebook_id}: {record_title}"
         )
 
     @app.command("replace-md")
@@ -109,7 +109,7 @@ def register(app: typer.Typer) -> None:
         """Replace a notebook record's output with content from a markdown file."""
         path = Path(file_path)
         if not path.exists():
-            console.print(f"[red]File not found:[/] {file_path}")
+            console.print(f"[red]Không tìm thấy tệp:[/] {file_path}")
             raise typer.Exit(code=1)
 
         content = path.read_text(encoding="utf-8")
@@ -117,6 +117,6 @@ def register(app: typer.Typer) -> None:
         client = DeepTutorApp()
         updated = client.update_record(notebook_id, record_id, output=content)
         if updated is None:
-            console.print(f"[red]Record not found:[/] {record_id}")
+            console.print(f"[red]Không tìm thấy bản ghi:[/] {record_id}")
             raise typer.Exit(code=1)
-        console.print(f"[green]Updated record[/] {record_id} in notebook {notebook_id}")
+        console.print(f"[green]Đã cập nhật bản ghi[/] {record_id} trong sổ tay {notebook_id}")

@@ -135,11 +135,11 @@ def make_skip_notice(*, capability: str, language: str, stages_skipped: list[str
         return ""
     if language.startswith("zh"):
         joined = "、".join(stages_skipped)
-        return f"> ⚡ 已跳过 `{capability}` 的 {joined} 阶段，以下为基于已有信息的快速结果。"
+        return f"> ⚡ Đã bỏ qua giai đoạn {joined} của `{capability}`; dưới đây là kết quả tổng hợp nhanh từ dữ liệu hiện có。"
     joined = ", ".join(stages_skipped)
     return (
-        f"> ⚡ Skipped {joined} stage(s) of `{capability}`; the result below is "
-        f"a best-effort synthesis from the partial trace."
+        f"> ⚡ Đã bỏ qua {joined} giai đoạn của `{capability}`; kết quả dưới đây là "
+        f"tổng hợp từ dữ liệu hiện có."
     )
 
 

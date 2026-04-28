@@ -48,9 +48,9 @@ def _login_openai_codex() -> None:
             prompt_fn=typer.prompt,
         )
     if not (token and getattr(token, "access", None)):
-        typer.echo("OpenAI Codex OAuth authentication failed.")
+        typer.echo("Xác thực OAuth OpenAI Codex thất bại.")
         raise typer.Exit(code=1)
-    typer.echo("OpenAI Codex OAuth authentication succeeded.")
+    typer.echo("Xác thực OAuth OpenAI Codex thành công.")
 
 
 async def _login_github_copilot() -> None:
@@ -72,6 +72,6 @@ async def _login_github_copilot() -> None:
             max_tokens=1,
         )
     except Exception as exc:
-        typer.echo(f"GitHub Copilot auth validation failed: {exc}")
+        typer.echo(f"Xác thực GitHub Copilot thất bại: {exc}")
         raise typer.Exit(code=1) from exc
-    typer.echo("GitHub Copilot auth validation succeeded.")
+    typer.echo("Xác thực GitHub Copilot thành công.")

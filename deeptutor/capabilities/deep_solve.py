@@ -59,8 +59,8 @@ class DeepSolveCapability(BaseCapability):
             rag_enabled = False
             await stream.progress(
                 message=(
-                    "RAG was enabled but no knowledge base is selected; "
-                    "the rag tool is disabled for this turn."
+                    "RAG đã được bật nhưng chưa chọn cơ sở tri thức; "
+                    "công cụ rag bị vô hiệu hóa trong lượt này."
                 ),
                 source=self.name,
                 stage="planning",
@@ -155,7 +155,7 @@ class DeepSolveCapability(BaseCapability):
                     return
                 if state == "error":
                     await stream.error(
-                        str(update.get("response", "") or "LLM call failed."),
+                        str(update.get("response", "") or "Gọi LLM thất bại."),
                         source=self.name,
                         stage=stage,
                         metadata=merge_trace_metadata(

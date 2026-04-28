@@ -58,7 +58,7 @@ class VisualizeCapability(BaseCapability):
         # Stage 1: Analyze
         async with stream.stage("analyzing", source=self.name):
             await stream.thinking(
-                "Analyzing visualization requirements...",
+                "Đang phân tích yêu cầu trực quan hóa...",
                 source=self.name,
                 stage="analyzing",
             )
@@ -69,7 +69,7 @@ class VisualizeCapability(BaseCapability):
                 attachments=context.attachments,
             )
             await stream.progress(
-                message=f"Render type: {analysis.render_type} — {analysis.description}",
+                message=f"Loại kết xuất: {analysis.render_type} — {analysis.description}",
                 source=self.name,
                 stage="analyzing",
             )
@@ -77,7 +77,7 @@ class VisualizeCapability(BaseCapability):
         # Stage 2: Generate code
         async with stream.stage("generating", source=self.name):
             await stream.thinking(
-                "Generating visualization code...",
+                "Đang tạo mã trực quan hóa...",
                 source=self.name,
                 stage="generating",
             )
@@ -87,7 +87,7 @@ class VisualizeCapability(BaseCapability):
                 analysis=analysis,
             )
             await stream.progress(
-                message="Code generated.",
+                message="Đã tạo mã.",
                 source=self.name,
                 stage="generating",
             )
@@ -109,7 +109,7 @@ class VisualizeCapability(BaseCapability):
                         review_notes="Skipped LLM review for html render_type.",
                     )
                     await stream.progress(
-                        message="HTML page ready (review skipped).",
+                        message="Trang HTML đã sẵn sàng (đã bỏ qua đánh giá).",
                         source=self.name,
                         stage="reviewing",
                     )
@@ -117,7 +117,7 @@ class VisualizeCapability(BaseCapability):
                     final_code = build_fallback_html(
                         title=analysis.description or "Visualization",
                         summary=analysis.data_description,
-                        note="The model did not return a renderable HTML document.",
+                        note="Mô hình không trả về tài liệu HTML có thể hiển thị.",
                     )
                     review = ReviewResult(
                         optimized_code=final_code,
@@ -125,13 +125,13 @@ class VisualizeCapability(BaseCapability):
                         review_notes="Used fallback HTML template.",
                     )
                     await stream.progress(
-                        message="HTML did not validate; using fallback template.",
+                        message="HTML không hợp lệ; đang sử dụng mẫu dự phòng.",
                         source=self.name,
                         stage="reviewing",
                     )
             else:
                 await stream.thinking(
-                    "Reviewing and optimizing code...",
+                    "Đang đánh giá và tối ưu hóa mã...",
                     source=self.name,
                     stage="reviewing",
                 )
@@ -143,13 +143,13 @@ class VisualizeCapability(BaseCapability):
                 final_code = review.optimized_code
                 if review.changed:
                     await stream.progress(
-                        message=f"Code optimized: {review.review_notes}",
+                        message=f"Mã đã được tối ưu: {review.review_notes}",
                         source=self.name,
                         stage="reviewing",
                     )
                 else:
                     await stream.progress(
-                        message="Code looks good — no changes needed.",
+                        message="Mã ổn — không cần thay đổi.",
                         source=self.name,
                         stage="reviewing",
                     )
@@ -295,7 +295,7 @@ class VisualizeCapability(BaseCapability):
                 },
                 "analysis": {
                     "render_type": render_type,
-                    "description": "Answer-now: skipped analysis stage.",
+                    "description": "Answer-now: đã bỏ qua giai đoạn phân tích.",
                     "data_description": "",
                     "chart_type": "",
                     "visual_elements": [],
@@ -304,7 +304,7 @@ class VisualizeCapability(BaseCapability):
                 "review": {
                     "optimized_code": final_code,
                     "changed": False,
-                    "review_notes": "Answer-now: skipped review stage.",
+                    "review_notes": "Answer-now: đã bỏ qua giai đoạn đánh giá.",
                 },
                 "metadata": {"answer_now": True},
             },
@@ -377,7 +377,7 @@ class VisualizeCapability(BaseCapability):
                 return
             if state == "error":
                 await stream.error(
-                    str(update.get("response", "") or "LLM call failed."),
+                    str(update.get("response", "") or "Gọi LLM thất bại."),
                     source=self.name,
                     stage=stage,
                     metadata=merge_trace_metadata(

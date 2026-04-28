@@ -24,7 +24,7 @@ def register(app: typer.Typer) -> None:
         tr = get_tool_registry()
         cr = get_capability_registry()
 
-        table = Table(title="Registered Plugins")
+        table = Table(title="Plugin đã đăng ký")
         table.add_column("Name", style="bold")
         table.add_column("Type")
         table.add_column("Description")
@@ -70,5 +70,5 @@ def register(app: typer.Typer) -> None:
             )
             return
 
-        console.print(f"[red]'{name}' not found.[/]")
+        console.print(f"[red]'{name}' không tìm thấy.[/]")
         raise typer.Exit(code=1)

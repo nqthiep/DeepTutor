@@ -268,7 +268,7 @@ class AgentLoop:
                 # poison the context and cause permanent 400 loops (#1303).
                 if response.finish_reason == "error":
                     logger.error("LLM returned error: {}", (clean or "")[:200])
-                    final_content = clean or "Sorry, I encountered an error calling the AI model."
+                    final_content = clean or "Xin lỗi, đã xảy ra lỗi khi gọi mô hình AI."
                     break
                 messages = self.context.add_assistant_message(
                     messages,
@@ -282,8 +282,8 @@ class AgentLoop:
         if final_content is None and iteration >= self.max_iterations:
             logger.warning("Max iterations ({}) reached", self.max_iterations)
             final_content = (
-                f"I reached the maximum number of tool call iterations ({self.max_iterations}) "
-                "without completing the task. You can try breaking the task into smaller steps."
+                f"Đã đạt số lần lặp gọi công cụ tối đa ({self.max_iterations}) "
+                "mà chưa hoàn thành nhiệm vụ. Bạn có thể thử chia nhỏ nhiệm vụ thành các bước nhỏ hơn."
             )
 
         return final_content, tools_used, messages
@@ -338,7 +338,7 @@ class AgentLoop:
             session.metadata.pop("nano_team_active", None)
             self.sessions.save(session)
         total = cancelled + sub_cancelled + team_cancelled
-        content = f"Stopped {total} task(s)." if total else "No active task to stop."
+        content = f"Đã dừng {total} nhiệm vụ." if total else "Không có nhiệm vụ đang hoạt động để dừng."
         await self.bus.publish_outbound(
             OutboundMessage(
                 channel=msg.channel,
@@ -353,7 +353,7 @@ class AgentLoop:
             OutboundMessage(
                 channel=msg.channel,
                 chat_id=msg.chat_id,
-                content="Restarting...",
+                content="Đang khởi động lại...",
             )
         )
 
@@ -389,7 +389,7 @@ class AgentLoop:
                     OutboundMessage(
                         channel=msg.channel,
                         chat_id=msg.chat_id,
-                        content="Sorry, I encountered an error.",
+                        content="Xin lỗi, đã xảy ra lỗi.",
                     )
                 )
 
@@ -438,7 +438,7 @@ class AgentLoop:
             return OutboundMessage(
                 channel=channel,
                 chat_id=chat_id,
-                content=final_content or "Background task completed.",
+                content=final_content or "Nhiệm vụ nền đã hoàn thành.",
             )
 
         preview = msg.content[:80] + "..." if len(msg.content) > 80 else msg.content
@@ -456,14 +456,14 @@ class AgentLoop:
                     return OutboundMessage(
                         channel=msg.channel,
                         chat_id=msg.chat_id,
-                        content="Memory archival failed, session not cleared. Please try again.",
+                        content="Lưu trữ bộ nhớ thất bại, phiên chưa được xóa. Vui lòng thử lại.",
                     )
             except Exception:
                 logger.exception("/new archival failed for {}", session.key)
                 return OutboundMessage(
                     channel=msg.channel,
                     chat_id=msg.chat_id,
-                    content="Memory archival failed, session not cleared. Please try again.",
+                    content="Lưu trữ bộ nhớ thất bại, phiên chưa được xóa. Vui lòng thử lại.",
                 )
 
             session.clear()
@@ -471,23 +471,23 @@ class AgentLoop:
             self.sessions.save(session)
             self.sessions.invalidate(session.key)
             return OutboundMessage(
-                channel=msg.channel, chat_id=msg.chat_id, content="New session started."
+                channel=msg.channel, chat_id=msg.chat_id, content="Phiên mới đã bắt đầu."
             )
         if cmd == "/help":
             lines = [
-                "🐈 TutorBot commands:",
-                "/new — Start a new conversation",
-                "/stop — Stop the current task",
-                "/restart — Restart the bot",
-                "/team <goal> — Start or instruct nano team mode",
-                "/team status — Show nano team state",
-                "/team log [n] — Show detailed collaboration logs (default 20)",
-                "/team approve <task_id> — Approve a pending task",
-                "/team reject <task_id> <reason> — Reject a pending task",
-                "/team manual <task_id> <instruction> — Send change request",
-                "/team stop — Stop nano team mode",
-                "/btw <instruction> — Async side task via single subagent",
-                "/help — Show available commands",
+                "🐈 Lệnh TutorBot:",
+                "/new — Bắt đầu cuộc trò chuyện mới",
+                "/stop — Dừng nhiệm vụ hiện tại",
+                "/restart — Khởi động lại bot",
+                "/team <goal> — Bắt đầu hoặc hướng dẫn chế độ nhóm nano",
+                "/team status — Hiển thị trạng thái nhóm nano",
+                "/team log [n] — Hiển thị nhật ký cộng tác chi tiết (mặc định 20)",
+                "/team approve <task_id> — Phê duyệt nhiệm vụ đang chờ",
+                "/team reject <task_id> <reason> — Từ chối nhiệm vụ đang chờ",
+                "/team manual <task_id> <instruction> — Gửi yêu cầu thay đổi",
+                "/team stop — Dừng chế độ nhóm nano",
+                "/btw <instruction> — Nhiệm vụ phụ không đồng bộ qua một subagent",
+                "/help — Hiển thị các lệnh có sẵn",
             ]
             return OutboundMessage(
                 channel=msg.channel,
@@ -501,7 +501,7 @@ class AgentLoop:
                 return OutboundMessage(
                     channel=msg.channel,
                     chat_id=msg.chat_id,
-                    content="Usage: /btw <instruction>",
+                    content="Cách dùng: /btw <instruction>",
                 )
             started = await self.subagents.spawn(
                 task=arg,
@@ -517,7 +517,7 @@ class AgentLoop:
                 channel=msg.channel,
                 chat_id=msg.chat_id,
                 content=(
-                    "Usage:\n"
+                    "Cách dùng:\n"
                     "/team <goal>\n"
                     "/team status\n"
                     "/team log [n]\n"
@@ -578,7 +578,7 @@ class AgentLoop:
                     return OutboundMessage(
                         channel=msg.channel,
                         chat_id=msg.chat_id,
-                        content="Usage: /team approve <task_id>",
+                        content="Cách dùng: /team approve <task_id>",
                     )
                 return OutboundMessage(
                     channel=msg.channel,
@@ -593,7 +593,7 @@ class AgentLoop:
                     return OutboundMessage(
                         channel=msg.channel,
                         chat_id=msg.chat_id,
-                        content="Usage: /team reject <task_id> <reason>",
+                        content="Cách dùng: /team reject <task_id> <reason>",
                     )
                 return OutboundMessage(
                     channel=msg.channel,
@@ -608,7 +608,7 @@ class AgentLoop:
                     return OutboundMessage(
                         channel=msg.channel,
                         chat_id=msg.chat_id,
-                        content="Usage: /team manual <task_id> <instruction>",
+                        content="Cách dùng: /team manual <task_id> <instruction>",
                     )
                 return OutboundMessage(
                     channel=msg.channel,
@@ -647,7 +647,7 @@ class AgentLoop:
                     channel=msg.channel,
                     chat_id=msg.chat_id,
                     content=(
-                        "Team mode is active. Supported input:\n"
+                        "Chế độ nhóm đang hoạt động. Đầu vào được hỗ trợ:\n"
                         "- /team <instruction|status|log|approve|reject|manual|stop>\n"
                         "- /btw <instruction>"
                     ),
@@ -688,7 +688,7 @@ class AgentLoop:
         )
 
         if final_content is None:
-            final_content = "I've completed processing but have no response to give."
+            final_content = "Đã xử lý xong nhưng không có phản hồi để đưa ra."
 
         self._save_turn(session, all_msgs, 1 + len(history))
         self.sessions.save(session)

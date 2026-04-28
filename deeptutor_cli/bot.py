@@ -21,10 +21,10 @@ def register(app: typer.Typer) -> None:
 
         bots = get_tutorbot_manager().list_bots()
         if not bots:
-            console.print("[dim]No TutorBots configured.[/]")
+            console.print("[dim]Chưa có TutorBot nào được cấu hình.[/]")
             return
 
-        table = Table(title="TutorBots")
+        table = Table(title="TutorBot")
         table.add_column("ID", style="cyan")
         table.add_column("Name")
         table.add_column("Status")
@@ -32,7 +32,7 @@ def register(app: typer.Typer) -> None:
         table.add_column("Channels", style="dim")
 
         for b in bots:
-            status = "[green]running[/]" if b.get("running") else "[dim]stopped[/]"
+            status = "[green]đang chạy[/]" if b.get("running") else "[dim]đã dừng[/]"
             table.add_row(
                 b["bot_id"],
                 b.get("name", ""),
@@ -52,9 +52,9 @@ def register(app: typer.Typer) -> None:
         mgr = get_tutorbot_manager()
         try:
             instance = asyncio.get_event_loop().run_until_complete(mgr.start_bot(name))
-            console.print(f"[green]Started TutorBot '{instance.config.name}' ({name})[/]")
+            console.print(f"[green]Đã khởi động TutorBot '{instance.config.name}' ({name})[/]")
         except RuntimeError as e:
-            console.print(f"[red]Failed to start: {e}[/]")
+            console.print(f"[red]Không thể khởi động: {e}[/]")
             raise typer.Exit(1)
 
     @app.command("stop")
@@ -67,9 +67,9 @@ def register(app: typer.Typer) -> None:
         mgr = get_tutorbot_manager()
         stopped = asyncio.get_event_loop().run_until_complete(mgr.stop_bot(name))
         if stopped:
-            console.print(f"[green]Stopped TutorBot '{name}'[/]")
+            console.print(f"[green]Đã dừng TutorBot '{name}'[/]")
         else:
-            console.print(f"[yellow]Bot '{name}' not found or not running.[/]")
+            console.print(f"[yellow]Bot '{name}' không tìm thấy hoặc không chạy.[/]")
 
     @app.command("create")
     def bot_create(
@@ -91,8 +91,8 @@ def register(app: typer.Typer) -> None:
         try:
             instance = asyncio.get_event_loop().run_until_complete(mgr.start_bot(name, config))
             console.print(
-                f"[green]Created and started TutorBot '{instance.config.name}' ({name})[/]"
+                f"[green]Đã tạo và khởi động TutorBot '{instance.config.name}' ({name})[/]"
             )
         except RuntimeError as e:
-            console.print(f"[red]Failed: {e}[/]")
+            console.print(f"[red]Thất bại: {e}[/]")
             raise typer.Exit(1)
