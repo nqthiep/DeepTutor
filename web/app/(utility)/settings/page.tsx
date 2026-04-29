@@ -1272,7 +1272,9 @@ function SettingsPageContent() {
                     </div>
                     <div className="sm:col-span-2">
                       <div className="mb-1.5 text-[12px] text-[var(--muted-foreground)]">
-                        {t("Base URL")}
+                        {activeService === "embedding"
+                          ? t("Endpoint URL")
+                          : t("Base URL")}
                       </div>
                       <input
                         className={inputClass}
@@ -1286,6 +1288,13 @@ function SettingsPageContent() {
                             : "https://api.openai.com/v1"
                         }
                       />
+                      {activeService === "embedding" && (
+                        <p className="mt-1.5 text-[11px] text-[var(--muted-foreground)]">
+                          {t(
+                            "Embedding requests are sent to this URL exactly; DeepTutor does not append /embeddings or /api/embed at request time.",
+                          )}
+                        </p>
+                      )}
                     </div>
                     <div className="sm:col-span-2">
                       <div className="mb-1.5 text-[12px] text-[var(--muted-foreground)]">
