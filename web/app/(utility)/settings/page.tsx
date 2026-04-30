@@ -73,7 +73,7 @@ type Catalog = {
 };
 
 type UiSettings = {
-  theme: "light" | "dark" | "glass" | "snow";
+  theme: "light" | "dark" | "glass" | "snow" | "nexus";
   language: "en" | "zh" | "vi";
 };
 
@@ -534,9 +534,9 @@ function SettingsPageContent() {
   const { isAdmin } = useAuth();
 
   const [status, setStatus] = useState<SystemStatus | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark" | "glass" | "snow">(
-    "light",
-  );
+  const [theme, setTheme] = useState<
+    "light" | "dark" | "glass" | "snow" | "nexus"
+  >("light");
   const [language, setLanguage] = useState<"en" | "zh" | "vi">("en");
   const [catalog, setCatalog] = useState<Catalog>(defaultCatalog());
   const [draft, setDraft] = useState<Catalog>(defaultCatalog());
@@ -640,7 +640,7 @@ function SettingsPageContent() {
   // -- UI preference helpers ----------------------------------------------
 
   const persistUi = async (
-    nextTheme: "light" | "dark" | "glass" | "snow",
+    nextTheme: "light" | "dark" | "glass" | "snow" | "nexus",
     nextLanguage: "en" | "zh" | "vi",
   ) => {
     await apiFetch("/api/v1/settings/ui", {
@@ -651,7 +651,7 @@ function SettingsPageContent() {
   };
 
   const updateTheme = async (
-    nextTheme: "light" | "dark" | "glass" | "snow",
+    nextTheme: "light" | "dark" | "glass" | "snow" | "nexus",
   ) => {
     setTheme(nextTheme);
     applyThemePreference(nextTheme);
@@ -1021,27 +1021,27 @@ function SettingsPageContent() {
             <span className="text-[12px] text-[var(--muted-foreground)]">
               {t("Theme")}
             </span>
-            <div className="flex gap-0.5 rounded-lg bg-[var(--muted)] p-0.5">
-              {(["snow", "light", "dark", "glass"] as const).map((v) => (
-                <button
-                  key={v}
-                  onClick={() => updateTheme(v)}
-                  className={`rounded-md px-2.5 py-1 text-[12px] transition-all ${
-                    theme === v
-                      ? "bg-[var(--card)] font-medium text-[var(--foreground)] shadow-sm"
-                      : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                  }`}
-                >
-                  {v === "snow"
-                    ? t("Snow")
-                    : v === "light"
-                      ? t("Light")
-                      : v === "dark"
-                        ? t("Dark")
-                        : t("Glass")}
-                </button>
-              ))}
-            </div>
+            <select
+              value={theme}
+              onChange={(e) => updateTheme(e.target.value as typeof theme)}
+              className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[13px] text-[var(--foreground)] shadow-sm outline-none transition-all focus:border-[var(--ring)] focus:ring-1 focus:ring-[var(--ring)]"
+            >
+              {(["nexus", "snow", "light", "dark", "glass"] as const).map(
+                (v) => (
+                  <option key={v} value={v}>
+                    {v === "nexus"
+                      ? t("Nexus")
+                      : v === "snow"
+                        ? t("Snow")
+                        : v === "light"
+                          ? t("Light")
+                          : v === "dark"
+                            ? t("Dark")
+                            : t("Glass")}
+                  </option>
+                ),
+              )}
+            </select>
           </div>
 
           <div className="flex items-center gap-2">
