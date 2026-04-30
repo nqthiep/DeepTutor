@@ -6,11 +6,12 @@ Provides notebook creation, querying, updating, deletion, and record management 
 import json
 from typing import AsyncGenerator, Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from deeptutor.agents.notebook import NotebookSummarizeAgent
+from deeptutor.services.auth.dependencies import get_current_user
 from deeptutor.services.notebook import notebook_manager
 
 router = APIRouter()
@@ -132,7 +133,7 @@ async def _stream_add_record_with_summary(
 
 
 @router.get("/list")
-async def list_notebooks():
+async def list_notebooks(user: dict = Depends(get_current_user)):
     """
     Get all notebook list
 
@@ -147,7 +148,7 @@ async def list_notebooks():
 
 
 @router.get("/statistics")
-async def get_statistics():
+async def get_statistics(user: dict = Depends(get_current_user)):
     """
     Get notebook statistics
 
@@ -162,7 +163,7 @@ async def get_statistics():
 
 
 @router.post("/create")
-async def create_notebook(request: CreateNotebookRequest):
+async def create_notebook(request: CreateNotebookRequest, user: dict = Depends(get_current_user)):
     """
     Create new notebook
 
@@ -185,7 +186,7 @@ async def create_notebook(request: CreateNotebookRequest):
 
 
 @router.get("/{notebook_id}")
-async def get_notebook(notebook_id: str):
+async def get_notebook(notebook_id: str, user: dict = Depends(get_current_user)):
     """
     Get notebook details
 
@@ -207,7 +208,7 @@ async def get_notebook(notebook_id: str):
 
 
 @router.put("/{notebook_id}")
-async def update_notebook(notebook_id: str, request: UpdateNotebookRequest):
+async def update_notebook(notebook_id: str, request: UpdateNotebookRequest, user: dict = Depends(get_current_user)):
     """
     Update notebook information
 
@@ -236,7 +237,7 @@ async def update_notebook(notebook_id: str, request: UpdateNotebookRequest):
 
 
 @router.delete("/{notebook_id}")
-async def delete_notebook(notebook_id: str):
+async def delete_notebook(notebook_id: str, user: dict = Depends(get_current_user)):
     """
     Delete notebook
 
@@ -258,7 +259,7 @@ async def delete_notebook(notebook_id: str):
 
 
 @router.post("/add_record")
-async def add_record(request: AddRecordRequest):
+async def add_record(request: AddRecordRequest, user: dict = Depends(get_current_user)):
     """
     Add record to notebook
 
@@ -291,7 +292,7 @@ async def add_record(request: AddRecordRequest):
 
 
 @router.post("/add_record_with_summary")
-async def add_record_with_summary(request: AddRecordRequest):
+async def add_record_with_summary(request: AddRecordRequest, user: dict = Depends(get_current_user)):
     """Add record to notebook and stream generated summary."""
     return StreamingResponse(
         _stream_add_record_with_summary(request),
@@ -301,7 +302,7 @@ async def add_record_with_summary(request: AddRecordRequest):
 
 
 @router.delete("/{notebook_id}/records/{record_id}")
-async def remove_record(notebook_id: str, record_id: str):
+async def remove_record(notebook_id: str, record_id: str, user: dict = Depends(get_current_user)):
     """
     Remove record from notebook
 
@@ -324,7 +325,7 @@ async def remove_record(notebook_id: str, record_id: str):
 
 
 @router.put("/{notebook_id}/records/{record_id}")
-async def update_record(notebook_id: str, record_id: str, request: UpdateRecordRequest):
+async def update_record(notebook_id: str, record_id: str, request: UpdateRecordRequest, user: dict = Depends(get_current_user)):
     """Update an existing notebook record in place."""
     try:
         updated = notebook_manager.update_record(
@@ -347,6 +348,6 @@ async def update_record(notebook_id: str, record_id: str, request: UpdateRecordR
 
 
 @router.get("/health")
-async def health_check():
+async def health_check(user: dict = Depends(get_current_user)):
     """Health check"""
     return {"status": "healthy", "service": "notebook"}

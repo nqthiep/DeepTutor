@@ -6,9 +6,10 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from deeptutor.services.auth.dependencies import get_current_user
 from deeptutor.services.session import get_sqlite_session_store
 
 logger = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ class UpsertEntryRequest(BaseModel):
 
 
 @router.post("/entries/upsert")
-async def upsert_single_entry(payload: UpsertEntryRequest):
+async def upsert_single_entry(payload: UpsertEntryRequest, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     try:
         await store.upsert_notebook_entries(payload.session_id, [payload.model_dump()])
@@ -99,6 +100,7 @@ async def upsert_single_entry(payload: UpsertEntryRequest):
 
 @router.get("/entries", response_model=NotebookEntryListResponse)
 async def list_entries(
+    user: dict = Depends(get_current_user),
     category_id: int | None = Query(default=None),
     bookmarked: bool | None = Query(default=None),
     is_correct: bool | None = Query(default=None),
@@ -120,7 +122,7 @@ async def list_entries(
 
 
 @router.get("/entries/lookup/by-question")
-async def lookup_entry(session_id: str = Query(...), question_id: str = Query(...)):
+async def lookup_entry(user: dict = Depends(get_current_user), session_id: str = Query(...), question_id: str = Query(...)):
     store = get_sqlite_session_store()
     entry = await store.find_notebook_entry(session_id, question_id)
     if entry is None:
@@ -129,7 +131,7 @@ async def lookup_entry(session_id: str = Query(...), question_id: str = Query(..
 
 
 @router.get("/entries/{entry_id}", response_model=NotebookEntryItem)
-async def get_entry(entry_id: int) -> NotebookEntryItem:
+async def get_entry(entry_id: int, user: dict = Depends(get_current_user)) -> NotebookEntryItem:
     store = get_sqlite_session_store()
     entry = await store.get_notebook_entry(entry_id)
     if entry is None:
@@ -138,7 +140,7 @@ async def get_entry(entry_id: int) -> NotebookEntryItem:
 
 
 @router.patch("/entries/{entry_id}")
-async def update_entry(entry_id: int, payload: EntryUpdateRequest):
+async def update_entry(entry_id: int, payload: EntryUpdateRequest, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     updates = payload.model_dump(exclude_none=True)
     if not updates:
@@ -150,7 +152,7 @@ async def update_entry(entry_id: int, payload: EntryUpdateRequest):
 
 
 @router.delete("/entries/{entry_id}")
-async def delete_entry(entry_id: int):
+async def delete_entry(entry_id: int, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     deleted = await store.delete_notebook_entry(entry_id)
     if not deleted:
@@ -162,7 +164,7 @@ async def delete_entry(entry_id: int):
 
 
 @router.post("/entries/{entry_id}/categories")
-async def add_entry_to_category(entry_id: int, payload: CategoryAddRequest):
+async def add_entry_to_category(entry_id: int, payload: CategoryAddRequest, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     entry = await store.get_notebook_entry(entry_id)
     if entry is None:
@@ -174,7 +176,7 @@ async def add_entry_to_category(entry_id: int, payload: CategoryAddRequest):
 
 
 @router.delete("/entries/{entry_id}/categories/{category_id}")
-async def remove_entry_from_category(entry_id: int, category_id: int):
+async def remove_entry_from_category(entry_id: int, category_id: int, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     removed = await store.remove_entry_from_category(entry_id, category_id)
     if not removed:
@@ -186,13 +188,13 @@ async def remove_entry_from_category(entry_id: int, category_id: int):
 
 
 @router.get("/categories", response_model=list[CategoryItem])
-async def list_categories():
+async def list_categories(user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     return await store.list_categories()
 
 
 @router.post("/categories", response_model=CategoryItem, status_code=201)
-async def create_category(payload: CategoryCreateRequest):
+async def create_category(payload: CategoryCreateRequest, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     try:
         return await store.create_category(payload.name)
@@ -201,7 +203,7 @@ async def create_category(payload: CategoryCreateRequest):
 
 
 @router.patch("/categories/{category_id}")
-async def rename_category(category_id: int, payload: CategoryRenameRequest):
+async def rename_category(category_id: int, payload: CategoryRenameRequest, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     updated = await store.rename_category(category_id, payload.name)
     if not updated:
@@ -210,7 +212,7 @@ async def rename_category(category_id: int, payload: CategoryRenameRequest):
 
 
 @router.delete("/categories/{category_id}")
-async def delete_category(category_id: int):
+async def delete_category(category_id: int, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     deleted = await store.delete_category(category_id)
     if not deleted:

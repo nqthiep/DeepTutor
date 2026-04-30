@@ -9,9 +9,10 @@ import asyncio
 import re
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 
 from deeptutor.agents.solve import MainSolver, SolverSessionManager
+from deeptutor.services.auth.dependencies import get_current_user
 from deeptutor.api.utils.log_interceptor import LogInterceptor
 from deeptutor.api.utils.task_id_manager import TaskIDManager
 from deeptutor.capabilities.deep_solve import DeepSolveCapability
@@ -38,7 +39,7 @@ solver_session_manager = SolverSessionManager()
 
 
 @router.get("/solve/sessions")
-async def list_solver_sessions(limit: int = 20):
+async def list_solver_sessions(limit: int = 20, user: dict = Depends(get_current_user)):
     """
     List recent solver sessions.
 
@@ -52,7 +53,7 @@ async def list_solver_sessions(limit: int = 20):
 
 
 @router.get("/solve/sessions/{session_id}")
-async def get_solver_session(session_id: str):
+async def get_solver_session(session_id: str, user: dict = Depends(get_current_user)):
     """
     Get a specific solver session with full message history.
 
@@ -69,7 +70,7 @@ async def get_solver_session(session_id: str):
 
 
 @router.delete("/solve/sessions/{session_id}")
-async def delete_solver_session(session_id: str):
+async def delete_solver_session(session_id: str, user: dict = Depends(get_current_user)):
     """
     Delete a solver session.
 

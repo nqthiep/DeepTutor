@@ -23,6 +23,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/context/AuthContext";
 import { apiUrl } from "@/lib/api";
 import AssistantResponse from "@/components/common/AssistantResponse";
 import MarkdownRenderer from "@/components/common/MarkdownRenderer";
@@ -1704,6 +1705,7 @@ function CapabilityTester({
 
 export default function PlaygroundPage() {
   const { t } = useTranslation();
+  const { isAdmin } = useAuth();
   const [tools, setToolsList] = useState<ToolInfo[]>([]);
   const [capabilities, setCapabilities] = useState<CapabilityInfo[]>([]);
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
@@ -1848,6 +1850,14 @@ export default function PlaygroundPage() {
       config: next as unknown as Record<string, unknown>,
     });
   };
+
+  if (!isAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
+        <p className="text-[13px] text-[var(--muted-foreground)]">{t("Access denied")}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--background)]">

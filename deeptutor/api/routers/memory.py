@@ -4,9 +4,10 @@ Two-file public memory API: SUMMARY and PROFILE.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from deeptutor.services.auth.dependencies import get_current_user, require_role
 from deeptutor.services.memory import MemoryFile, get_memory_service
 from deeptutor.services.session import get_sqlite_session_store
 
@@ -39,12 +40,12 @@ class MemoryClearRequest(BaseModel):
 
 
 @router.get("")
-async def get_memory():
+async def get_memory(user: dict = Depends(get_current_user)):
     return _snap_dict(get_memory_service().read_snapshot())
 
 
 @router.put("")
-async def update_memory(payload: FileUpdateRequest):
+async def update_memory(payload: FileUpdateRequest, user: dict = Depends(get_current_user)):
     if payload.file not in _VALID_FILES:
         raise HTTPException(status_code=400, detail=f"Invalid file: {payload.file}")
     snap = get_memory_service().write_file(payload.file, payload.content)
@@ -52,7 +53,7 @@ async def update_memory(payload: FileUpdateRequest):
 
 
 @router.post("/refresh")
-async def refresh_memory(payload: MemoryRefreshRequest):
+async def refresh_memory(payload: MemoryRefreshRequest, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     session_id = str(payload.session_id or "").strip()
     if session_id:
@@ -69,7 +70,7 @@ async def refresh_memory(payload: MemoryRefreshRequest):
 
 
 @router.post("/clear")
-async def clear_memory(payload: MemoryClearRequest | None = None):
+async def clear_memory(payload: MemoryClearRequest | None = None, user: dict = Depends(get_current_user)):
     svc = get_memory_service()
     target = payload.file if payload else None
     if target and target not in _VALID_FILES:

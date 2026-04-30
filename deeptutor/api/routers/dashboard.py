@@ -2,15 +2,16 @@
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from deeptutor.services.auth.dependencies import get_current_user, require_role
 from deeptutor.services.session import get_sqlite_session_store
 
 router = APIRouter()
 
 
 @router.get("/recent")
-async def get_recent_activities(limit: int = 50, type: str | None = None):
+async def get_recent_activities(limit: int = 50, type: str | None = None, user: dict = Depends(require_role("administrator", "manager"))):
     store = get_sqlite_session_store()
     sessions = await store.list_sessions(limit=limit, offset=0)
     activities: list[dict[str, Any]] = []
@@ -39,7 +40,7 @@ async def get_recent_activities(limit: int = 50, type: str | None = None):
 
 
 @router.get("/{entry_id}")
-async def get_activity_entry(entry_id: str):
+async def get_activity_entry(entry_id: str, user: dict = Depends(require_role("administrator", "manager"))):
     store = get_sqlite_session_store()
     session = await store.get_session_with_messages(entry_id)
     if session is None:

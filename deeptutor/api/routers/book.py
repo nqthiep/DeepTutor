@@ -11,9 +11,10 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
+from deeptutor.services.auth.dependencies import require_role
 from deeptutor.book import (
     BlockType,
     BookProposal,
@@ -176,7 +177,7 @@ async def get_page(book_id: str, page_id: str) -> dict[str, Any]:
 
 
 @router.delete("/books/{book_id}")
-async def delete_book(book_id: str) -> dict[str, Any]:
+async def delete_book(book_id: str, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     engine = get_book_engine()
     ok = engine.delete_book(book_id)
     if not ok:
@@ -185,7 +186,7 @@ async def delete_book(book_id: str) -> dict[str, Any]:
 
 
 @router.post("/books")
-async def create_book(req: CreateBookRequest) -> dict[str, Any]:
+async def create_book(req: CreateBookRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     """Stage 1: capture inputs + run IdeationAgent."""
     if not req.user_intent.strip():
         raise HTTPException(status_code=400, detail="user_intent is required")
@@ -211,7 +212,7 @@ async def create_book(req: CreateBookRequest) -> dict[str, Any]:
 
 
 @router.post("/books/confirm-proposal")
-async def confirm_proposal(req: ConfirmProposalRequest) -> dict[str, Any]:
+async def confirm_proposal(req: ConfirmProposalRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     """Stage 2: user confirms (and possibly edits) the proposal → SpineAgent."""
     engine = get_book_engine()
     edited: BookProposal | None = None
@@ -234,7 +235,7 @@ async def confirm_proposal(req: ConfirmProposalRequest) -> dict[str, Any]:
 
 
 @router.post("/books/confirm-spine")
-async def confirm_spine(req: ConfirmSpineRequest) -> dict[str, Any]:
+async def confirm_spine(req: ConfirmSpineRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     """Stage 3: user confirms the spine → create pending page shells."""
     engine = get_book_engine()
     edited: Spine | None = None
@@ -258,7 +259,7 @@ async def confirm_spine(req: ConfirmSpineRequest) -> dict[str, Any]:
 
 
 @router.post("/books/compile-page")
-async def compile_page(req: CompilePageRequest) -> dict[str, Any]:
+async def compile_page(req: CompilePageRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     """Drive the compiler for the page the user just opened (current-page priority)."""
     engine = get_book_engine()
     try:
@@ -272,7 +273,7 @@ async def compile_page(req: CompilePageRequest) -> dict[str, Any]:
 
 
 @router.post("/books/regenerate-block")
-async def regenerate_block(req: RegenerateBlockRequest) -> dict[str, Any]:
+async def regenerate_block(req: RegenerateBlockRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     engine = get_book_engine()
     try:
         block = await engine.regenerate_block(
@@ -304,7 +305,7 @@ def _coerce_content_type(name: str) -> ContentType:
 
 
 @router.post("/books/insert-block")
-async def insert_block(req: InsertBlockRequest) -> dict[str, Any]:
+async def insert_block(req: InsertBlockRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     engine = get_book_engine()
     block_type = _coerce_block_type(req.block_type)
     try:
@@ -325,7 +326,7 @@ async def insert_block(req: InsertBlockRequest) -> dict[str, Any]:
 
 
 @router.post("/books/delete-block")
-async def delete_block(req: DeleteBlockRequest) -> dict[str, Any]:
+async def delete_block(req: DeleteBlockRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     engine = get_book_engine()
     ok = await engine.delete_block(book_id=req.book_id, page_id=req.page_id, block_id=req.block_id)
     if not ok:
@@ -334,7 +335,7 @@ async def delete_block(req: DeleteBlockRequest) -> dict[str, Any]:
 
 
 @router.post("/books/move-block")
-async def move_block(req: MoveBlockRequest) -> dict[str, Any]:
+async def move_block(req: MoveBlockRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     engine = get_book_engine()
     ok = await engine.move_block(
         book_id=req.book_id,
@@ -348,7 +349,7 @@ async def move_block(req: MoveBlockRequest) -> dict[str, Any]:
 
 
 @router.post("/books/change-block-type")
-async def change_block_type(req: ChangeBlockTypeRequest) -> dict[str, Any]:
+async def change_block_type(req: ChangeBlockTypeRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     engine = get_book_engine()
     new_type = _coerce_block_type(req.new_type)
     try:
@@ -368,7 +369,7 @@ async def change_block_type(req: ChangeBlockTypeRequest) -> dict[str, Any]:
 
 
 @router.post("/books/deep-dive")
-async def deep_dive(req: DeepDiveRequest) -> dict[str, Any]:
+async def deep_dive(req: DeepDiveRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     engine = get_book_engine()
     content_type = _coerce_content_type(req.content_type)
     try:
@@ -388,7 +389,7 @@ async def deep_dive(req: DeepDiveRequest) -> dict[str, Any]:
 
 
 @router.post("/books/quiz-attempt")
-async def quiz_attempt(req: QuizAttemptRequest) -> dict[str, Any]:
+async def quiz_attempt(req: QuizAttemptRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     engine = get_book_engine()
     progress = await engine.record_quiz_attempt(
         book_id=req.book_id,
@@ -410,7 +411,7 @@ async def book_health(book_id: str) -> dict[str, Any]:
 
 
 @router.post("/books/{book_id}/refresh-fingerprints")
-async def refresh_fingerprints(book_id: str) -> dict[str, Any]:
+async def refresh_fingerprints(book_id: str, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     engine = get_book_engine()
     result = engine.refresh_kb_fingerprints(book_id)
     if result is None:
@@ -419,7 +420,7 @@ async def refresh_fingerprints(book_id: str) -> dict[str, Any]:
 
 
 @router.post("/books/supplement")
-async def supplement(req: SupplementRequest) -> dict[str, Any]:
+async def supplement(req: SupplementRequest, user: dict = Depends(require_role("administrator", "manager"))) -> dict[str, Any]:
     engine = get_book_engine()
     try:
         block = await engine.supplement_for_weakness(

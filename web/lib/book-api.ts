@@ -1,4 +1,4 @@
-import { apiUrl, wsUrl } from "@/lib/api";
+import { apiFetch, apiUrl, wsUrl } from "@/lib/api";
 import type {
   Book,
   BookDetail,
@@ -11,7 +11,7 @@ import type {
 const BASE = "/api/v1/book";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(apiUrl(`${BASE}${path}`), {
+  const res = await apiFetch(`${BASE}${path}`, {
     headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
     ...init,
   });

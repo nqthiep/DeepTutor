@@ -103,6 +103,15 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Failed to start EventBus: {e}")
 
+    # Initialize auth tables (idempotent)
+    try:
+        from deeptutor.services.auth.store import get_auth_store
+
+        get_auth_store()
+        logger.info("Auth store initialized")
+    except Exception as e:
+        logger.warning(f"Failed to initialize auth store: {e}")
+
     try:
         from deeptutor.services.tutorbot import get_tutorbot_manager
 
@@ -200,6 +209,7 @@ app.mount(
 from deeptutor.api.routers import (
     agent_config,
     attachments,
+    auth,
     book,
     chat,
     co_writer,
@@ -221,6 +231,7 @@ from deeptutor.api.routers import (
 )
 
 # Include routers
+app.include_router(auth.router)
 app.include_router(solve.router, prefix="/api/v1", tags=["solve"])
 app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
 app.include_router(question.router, prefix="/api/v1/question", tags=["question"])

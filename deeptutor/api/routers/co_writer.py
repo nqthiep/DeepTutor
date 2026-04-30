@@ -6,7 +6,7 @@ import traceback
 from typing import AsyncGenerator, Literal
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
@@ -27,6 +27,7 @@ from deeptutor.co_writer.storage import (
 from deeptutor.core.context import UnifiedContext
 from deeptutor.core.stream_bus import StreamBus
 from deeptutor.logging import get_logger
+from deeptutor.services.auth.dependencies import get_current_user
 from deeptutor.services.config import PROJECT_ROOT, load_config_with_main
 from deeptutor.services.llm import clean_thinking_tags
 from deeptutor.services.settings.interface_settings import get_ui_language
@@ -402,7 +403,7 @@ async def _stream_react_edit(request: ReactEditRequest) -> AsyncGenerator[str, N
 
 
 @router.post("/edit", response_model=EditResponse)
-async def edit_text(request: EditRequest):
+async def edit_text(request: EditRequest, user: dict = Depends(get_current_user)):
     try:
         # Get agent with refreshed LLM configuration from Settings
         agent = get_edit_agent()
@@ -426,7 +427,7 @@ async def edit_text(request: EditRequest):
 
 
 @router.post("/edit_react", response_model=ReactEditResponse)
-async def edit_text_react(request: ReactEditRequest):
+async def edit_text_react(request: ReactEditRequest, user: dict = Depends(get_current_user)):
     try:
         return await _run_react_edit(request, language=_current_language())
     except HTTPException:
@@ -437,7 +438,7 @@ async def edit_text_react(request: ReactEditRequest):
 
 
 @router.post("/edit_react/stream")
-async def edit_text_react_stream(request: ReactEditRequest):
+async def edit_text_react_stream(request: ReactEditRequest, user: dict = Depends(get_current_user)):
     try:
         _prepare_react_edit_request(request, _current_language())
     except HTTPException:
@@ -450,7 +451,7 @@ async def edit_text_react_stream(request: ReactEditRequest):
 
 
 @router.post("/automark", response_model=AutoMarkResponse)
-async def auto_mark_text(request: AutoMarkRequest):
+async def auto_mark_text(request: AutoMarkRequest, user: dict = Depends(get_current_user)):
     """AI auto-mark text"""
     try:
         # Get agent with refreshed LLM configuration from Settings
@@ -468,7 +469,7 @@ async def auto_mark_text(request: AutoMarkRequest):
 
 
 @router.get("/history")
-async def get_history():
+async def get_history(user: dict = Depends(get_current_user)):
     """Get all operation history"""
     try:
         history = load_history()
@@ -478,7 +479,7 @@ async def get_history():
 
 
 @router.get("/history/{operation_id}")
-async def get_operation(operation_id: str):
+async def get_operation(operation_id: str, user: dict = Depends(get_current_user)):
     """Get single operation details"""
     try:
         history = load_history()
@@ -493,7 +494,7 @@ async def get_operation(operation_id: str):
 
 
 @router.get("/tool_calls/{operation_id}")
-async def get_tool_call(operation_id: str):
+async def get_tool_call(operation_id: str, user: dict = Depends(get_current_user)):
     """Get tool call details"""
     try:
         # Find matching file
@@ -508,7 +509,7 @@ async def get_tool_call(operation_id: str):
 
 
 @router.post("/export/markdown")
-async def export_markdown(content: dict):
+async def export_markdown(content: dict, user: dict = Depends(get_current_user)):
     """Export as Markdown file"""
     try:
         markdown_content = content.get("content", "")
@@ -575,7 +576,7 @@ class DocumentSummaryResponse(BaseModel):
 
 
 @router.get("/documents")
-async def list_documents() -> dict[str, list[DocumentSummaryResponse]]:
+async def list_documents(user: dict = Depends(get_current_user)) -> dict[str, list[DocumentSummaryResponse]]:
     """List all Co-Writer documents (summary view, sorted by recency)."""
     try:
         storage = get_co_writer_storage()
@@ -587,7 +588,7 @@ async def list_documents() -> dict[str, list[DocumentSummaryResponse]]:
 
 
 @router.post("/documents", response_model=DocumentResponse)
-async def create_document(request: CreateDocumentRequest) -> DocumentResponse:
+async def create_document(request: CreateDocumentRequest, user: dict = Depends(get_current_user)) -> DocumentResponse:
     """Create a new Co-Writer document."""
     try:
         storage = get_co_writer_storage()
@@ -599,7 +600,7 @@ async def create_document(request: CreateDocumentRequest) -> DocumentResponse:
 
 
 @router.get("/documents/{doc_id}", response_model=DocumentResponse)
-async def get_document(doc_id: str) -> DocumentResponse:
+async def get_document(doc_id: str, user: dict = Depends(get_current_user)) -> DocumentResponse:
     """Get a single Co-Writer document by id."""
     try:
         storage = get_co_writer_storage()
@@ -615,7 +616,7 @@ async def get_document(doc_id: str) -> DocumentResponse:
 
 
 @router.put("/documents/{doc_id}", response_model=DocumentResponse)
-async def update_document(doc_id: str, request: UpdateDocumentRequest) -> DocumentResponse:
+async def update_document(doc_id: str, request: UpdateDocumentRequest, user: dict = Depends(get_current_user)) -> DocumentResponse:
     """Update a Co-Writer document (title and/or content)."""
     try:
         storage = get_co_writer_storage()
@@ -631,7 +632,7 @@ async def update_document(doc_id: str, request: UpdateDocumentRequest) -> Docume
 
 
 @router.delete("/documents/{doc_id}")
-async def delete_document(doc_id: str) -> dict[str, bool]:
+async def delete_document(doc_id: str, user: dict = Depends(get_current_user)) -> dict[str, bool]:
     """Delete a Co-Writer document."""
     try:
         storage = get_co_writer_storage()

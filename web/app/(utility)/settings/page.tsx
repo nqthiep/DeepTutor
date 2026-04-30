@@ -2,6 +2,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import {
   Brain,
   ChevronDown,
@@ -23,7 +24,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { writeStoredLanguage } from "@/context/app-shell-storage";
-import { apiUrl } from "@/lib/api";
+import { apiFetch, apiUrl } from "@/lib/api";
 import { setTheme as applyThemePreference } from "@/lib/theme";
 
 type ServiceName = "llm" | "embedding" | "search";
@@ -98,8 +99,8 @@ type SystemStatus = {
 
 // ---------------------------------------------------------------------------
 
-function cloneCatalog(catalog: Catalog): Catalog {
-  return JSON.parse(JSON.stringify(catalog)) as Catalog;
+function cloneCatalog(catalog: Catalog | undefined): Catalog {
+  return JSON.parse(JSON.stringify(catalog ?? defaultCatalog())) as Catalog;
 }
 
 function getActiveProfile(
@@ -186,7 +187,7 @@ function formatContextWindowSource(
 
 function formatContextWindowUpdatedAt(
   value: string | undefined,
-  language: "en" | "zh",
+  language: "en" | "zh" | "vi",
 ): string {
   if (!value) return "";
   const parsed = new Date(value);
@@ -530,6 +531,7 @@ function DimensionField({
 
 function SettingsPageContent() {
   const { t } = useTranslation();
+  const { isAdmin } = useAuth();
 
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [theme, setTheme] = useState<"light" | "dark" | "glass" | "snow">(
@@ -564,16 +566,18 @@ function SettingsPageContent() {
 
   useEffect(() => {
     const load = async () => {
-      const settingsResponse = await fetch(apiUrl("/api/v1/settings"));
+      const settingsResponse = await apiFetch("/api/v1/settings");
       const settingsPayload =
         (await settingsResponse.json()) as SettingsPayload;
       setCatalog(settingsPayload.catalog);
       setDraft(cloneCatalog(settingsPayload.catalog));
-      setTheme(settingsPayload.ui.theme);
-      setLanguage(settingsPayload.ui.language);
+      if (settingsPayload.ui) {
+        setTheme(settingsPayload.ui.theme);
+        setLanguage(settingsPayload.ui.language);
+      }
       if (settingsPayload.providers) setProviders(settingsPayload.providers);
 
-      const statusResponse = await fetch(apiUrl("/api/v1/system/status"));
+      const statusResponse = await apiFetch("/api/v1/system/status");
       const statusPayload = (await statusResponse.json()) as SystemStatus;
       setStatus(statusPayload);
     };
@@ -639,10 +643,10 @@ function SettingsPageContent() {
     nextTheme: "light" | "dark" | "glass" | "snow",
     nextLanguage: "en" | "zh" | "vi",
   ) => {
-    await fetch(apiUrl("/api/v1/settings/ui"), {
+    await apiFetch("/api/v1/settings/ui", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ theme: nextTheme, language: nextLanguage }),
+      body: JSON.stringify({ theme, language }),
     });
   };
 
@@ -816,7 +820,7 @@ function SettingsPageContent() {
   const saveCatalog = async () => {
     setSaving(true);
     try {
-      const response = await fetch(apiUrl("/api/v1/settings/catalog"), {
+      const response = await apiFetch("/api/v1/settings/catalog", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ catalog: draft }),
@@ -833,7 +837,7 @@ function SettingsPageContent() {
   const applyCatalog = async () => {
     setApplying(true);
     try {
-      const response = await fetch(apiUrl("/api/v1/settings/apply"), {
+      const response = await apiFetch("/api/v1/settings/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ catalog: draft }),
@@ -842,7 +846,7 @@ function SettingsPageContent() {
       setCatalog(payload.catalog);
       setDraft(cloneCatalog(payload.catalog));
       setToast(t("Applied to .env"));
-      const statusResponse = await fetch(apiUrl("/api/v1/system/status"));
+      const statusResponse = await apiFetch("/api/v1/system/status");
       setStatus((await statusResponse.json()) as SystemStatus);
     } finally {
       setApplying(false);
@@ -862,8 +866,8 @@ function SettingsPageContent() {
       setEmbeddingCapabilities(null);
     }
     try {
-      const response = await fetch(
-        apiUrl(`/api/v1/settings/tests/${activeService}/start`),
+      const response = await apiFetch(
+        `/api/v1/settings/tests/${activeService}/start`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -969,39 +973,45 @@ function SettingsPageContent() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={runTour}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
-            >
-              <Rocket className="h-3 w-3" />
-              {t("Tour")}
-            </button>
-            <button
-              data-tour="tour-save-test"
-              onClick={saveCatalog}
-              disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)] disabled:opacity-40"
-            >
-              {saving ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Save className="h-3 w-3" />
-              )}
-              {t("Save Draft")}
-            </button>
-            <button
-              data-tour="tour-actions"
-              onClick={applyCatalog}
-              disabled={applying}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3 py-1.5 text-[12px] font-medium text-[var(--background)] transition-opacity hover:opacity-80 disabled:opacity-40"
-            >
-              {applying ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Wand2 className="h-3 w-3" />
-              )}
-              {t("Apply")}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={runTour}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
+              >
+                <Rocket className="h-3 w-3" />
+                {t("Tour")}
+              </button>
+            )}
+            {isAdmin && (
+              <>
+                <button
+                  data-tour="tour-save-test"
+                  onClick={saveCatalog}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)] disabled:opacity-40"
+                >
+                  {saving ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Save className="h-3 w-3" />
+                  )}
+                  {t("Save Draft")}
+                </button>
+                <button
+                  data-tour="tour-actions"
+                  onClick={applyCatalog}
+                  disabled={applying}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3 py-1.5 text-[12px] font-medium text-[var(--background)] transition-opacity hover:opacity-80 disabled:opacity-40"
+                >
+                  {applying ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Wand2 className="h-3 w-3" />
+                  )}
+                  {t("Apply")}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -1058,37 +1068,37 @@ function SettingsPageContent() {
           <div className="ml-auto flex items-center gap-4 text-[12px] text-[var(--muted-foreground)]">
             <span className="flex items-center gap-1.5">
               <span
-                className={`inline-block h-1.5 w-1.5 rounded-full ${statusDotClass(status?.backend.status === "online", false)}`}
+                className={`inline-block h-1.5 w-1.5 rounded-full ${statusDotClass(status?.backend?.status === "online", false)}`}
               />
               {t("Backend")}
             </span>
             <span className="flex items-center gap-1.5">
               <span
-                className={`inline-block h-1.5 w-1.5 rounded-full ${statusDotClass(Boolean(status?.llm.model), Boolean(status?.llm.error))}`}
+                className={`inline-block h-1.5 w-1.5 rounded-full ${statusDotClass(Boolean(status?.llm?.model), Boolean(status?.llm?.error))}`}
               />
               {t("LLM")}
-              {status?.llm.model && (
+              {status?.llm?.model && (
                 <span className="text-[var(--muted-foreground)]/50">
-                  · {status.llm.model}
+                  · {status?.llm?.model ?? "—"}
                 </span>
               )}
             </span>
             <span className="flex items-center gap-1.5">
               <span
-                className={`inline-block h-1.5 w-1.5 rounded-full ${statusDotClass(Boolean(status?.embeddings.model), Boolean(status?.embeddings.error))}`}
+                className={`inline-block h-1.5 w-1.5 rounded-full ${statusDotClass(Boolean(status?.embeddings?.model), Boolean(status?.embeddings?.error))}`}
               />
               {t("Emb")}
             </span>
             <span className="flex items-center gap-1.5">
               <span
-                className={`inline-block h-1.5 w-1.5 rounded-full ${statusDotClass(Boolean(status?.search.provider), false)}`}
+                className={`inline-block h-1.5 w-1.5 rounded-full ${statusDotClass(Boolean(status?.search?.provider), false)}`}
               />
               {t("Search")}
             </span>
           </div>
         </div>
 
-        {/* ── Service Configuration ── */}
+        {isAdmin && (
         <div className="mb-8">
           <div className="mb-5 flex items-center justify-between">
             <div className="flex items-center gap-1">
@@ -1543,8 +1553,10 @@ function SettingsPageContent() {
             </div>
           )}
         </div>
+        )}
 
         {/* ── Diagnostics ── */}
+        {isAdmin && (
         <div className="mb-6 rounded-xl border border-[var(--border)]">
           <div className="flex items-center justify-between px-5 py-3.5">
             <button
@@ -1605,6 +1617,7 @@ function SettingsPageContent() {
             </div>
           )}
         </div>
+        )}
 
         {/* ── Footer note ── */}
         <p className="mt-2 pb-4 text-[11px] leading-relaxed text-[var(--muted-foreground)]/40">

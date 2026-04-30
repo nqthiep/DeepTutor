@@ -57,7 +57,7 @@ const CONTENT_TYPE_OPTIONS: ContentTypeOption[] = [
 
 export interface SpineEditorProps {
   spine: Spine;
-  onConfirm: (spine: Spine) => void | Promise<void>;
+  onConfirm?: (spine: Spine) => void | Promise<void>;
   loading?: boolean;
 }
 
@@ -111,7 +111,7 @@ export default function SpineEditor({
     const cleaned = chapters
       .filter((c) => c.title.trim())
       .map((c, i) => ({ ...c, order: i }));
-    await onConfirm({ ...spine, chapters: cleaned });
+    if (onConfirm) await onConfirm({ ...spine, chapters: cleaned });
   };
 
   return (

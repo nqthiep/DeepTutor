@@ -24,6 +24,7 @@ interface KnowledgeBaseListProps {
   kbs: KnowledgeBase[];
   selectedKbName: string | null;
   onSelect: (name: string) => void;
+  canManage: boolean;
   onCreate: () => void;
   onSetDefault: (name: string) => void;
   onDelete: (name: string) => void;
@@ -34,6 +35,7 @@ export default function KnowledgeBaseList({
   kbs,
   selectedKbName,
   onSelect,
+  canManage,
   onCreate,
   onSetDefault,
   onDelete,
@@ -62,15 +64,17 @@ export default function KnowledgeBaseList({
           <PanelLeftOpen size={14} strokeWidth={1.7} />
         </button>
 
-        <button
-          type="button"
-          onClick={onCreate}
-          title={t("New knowledge base")}
-          aria-label={t("New knowledge base")}
-          className="mb-1 flex h-8 w-8 items-center justify-center rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
-        >
-          <Plus size={14} strokeWidth={2} />
-        </button>
+        {canManage && onCreate && (
+          <button
+            type="button"
+            onClick={onCreate}
+            title={t("New knowledge base")}
+            aria-label={t("New knowledge base")}
+            className="mb-1 flex h-8 w-8 items-center justify-center rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
+          >
+            <Plus size={16} />
+          </button>
+        )}
 
         <div className="my-1 h-px w-6 bg-[var(--border)]/60" />
 
@@ -115,14 +119,16 @@ export default function KnowledgeBaseList({
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={onCreate}
-          className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--primary)] px-3 py-1.5 text-[12.5px] font-medium text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
-        >
-          <Plus size={13} />
-          {t("New knowledge base")}
-        </button>
+        {canManage && onCreate && (
+          <button
+            type="button"
+            onClick={onCreate}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--primary)] px-3 py-1.5 text-[12.5px] font-medium text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
+          >
+            <Plus size={13} />
+            {t("New knowledge base")}
+          </button>
+        )}
 
         <div className="relative">
           <Search

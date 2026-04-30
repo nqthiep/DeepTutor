@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { useKnowledgeBases } from "@/hooks/useKnowledgeBases";
 import KnowledgeBaseList from "./KnowledgeBaseList";
@@ -11,6 +12,8 @@ import CreateKbModal from "./CreateKbModal";
 
 export default function KnowledgePage() {
   const { t } = useTranslation();
+  const { isAdmin, isManager } = useAuth();
+  const canManage = isAdmin || isManager;
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialKb = searchParams.get("kb");
@@ -172,6 +175,7 @@ export default function KnowledgePage() {
             kbs={kbs}
             selectedKbName={selectedKbName}
             onSelect={setExplicitSelection}
+            canManage={canManage}
             onCreate={() => setCreateOpen(true)}
             onSetDefault={handleSetDefault}
             onDelete={handleDelete}
@@ -182,6 +186,7 @@ export default function KnowledgePage() {
             uploadPolicy={uploadPolicy}
             task={selectedKb ? tasksByKb[selectedKb.name] : undefined}
             history={selectedKb ? (historyByKb[selectedKb.name] ?? []) : []}
+            canManage={canManage}
             onCreate={() => setCreateOpen(true)}
             onUpload={handleUpload}
             onReindex={handleReindex}

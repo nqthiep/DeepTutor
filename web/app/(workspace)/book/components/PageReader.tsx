@@ -28,6 +28,7 @@ const INSERTABLE_TYPES: BlockType[] = [
 
 export interface PageReaderProps {
   page: Page | null;
+  canManage?: boolean;
   onRegenerateBlock?: (block: Block) => void;
   onDeleteBlock?: (block: Block) => void;
   onMoveBlock?: (block: Block, direction: "up" | "down") => void;

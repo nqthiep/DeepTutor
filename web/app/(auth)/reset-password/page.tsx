@@ -1,0 +1,154 @@
+"use client";
+
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
+import { Lock, GraduationCap, ArrowLeft, CheckCircle2 } from "lucide-react";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Card from "@/components/ui/Card";
+import { useAuth } from "@/context/AuthContext";
+
+function ResetPasswordForm() {
+  const { t } = useTranslation();
+  const { resetPassword } = useAuth();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") ?? "";
+
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!token) {
+      setError(t("Invalid or missing reset token"));
+      return;
+    }
+    if (!password) {
+      setError(t("Please enter your password"));
+      return;
+    }
+    if (password.length < 8) {
+      setError(t("Password must be at least 8 characters"));
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError(t("Passwords don't match"));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await resetPassword(token, password);
+      setDone(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("Something went wrong"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (done) {
+    return (
+      <Card>
+        <div className="flex flex-col items-center text-center py-4">
+          <div className="w-14 h-14 rounded-full bg-[var(--primary)]/10 flex items-center justify-center mb-5">
+            <CheckCircle2 size={32} className="text-[var(--primary)]" />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">
+            {t("Password reset successfully")}
+          </h1>
+          <p className="text-sm text-[var(--muted-foreground)] mt-2 leading-relaxed max-w-sm">
+            {t("Your password has been updated. You can now sign in with your new password.")}
+          </p>
+          <Link
+            href="/login"
+            className="mt-6 inline-flex items-center gap-1.5 text-[13px] text-[var(--primary)] hover:underline font-medium"
+          >
+            {t("Sign in")} <ArrowLeft size={15} className="rotate-180" />
+          </Link>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <div className="flex flex-col items-center mb-8">
+        <div className="flex items-center gap-2.5 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-[var(--primary)] flex items-center justify-center">
+            <GraduationCap size={22} className="text-[var(--primary-foreground)]" />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-[var(--foreground)]">
+            DeepTutor
+          </span>
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">
+          {t("Set a new password")}
+        </h1>
+        <p className="text-sm text-[var(--muted-foreground)] mt-2 text-center leading-relaxed max-w-sm">
+          {t("Enter your new password below.")}
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label={t("New password")}
+          type="password"
+          placeholder={t("At least 8 characters")}
+          icon={<Lock size={18} />}
+          showPasswordToggle
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="new-password"
+          autoFocus
+        />
+
+        <Input
+          label={t("Confirm password")}
+          type="password"
+          placeholder={t("Repeat your password")}
+          icon={<Lock size={18} />}
+          showPasswordToggle
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          autoComplete="new-password"
+        />
+
+        {error && (
+          <div className="rounded-lg bg-[var(--destructive)]/10 border border-[var(--destructive)]/20 px-4 py-2.5 text-sm text-[var(--destructive)]">
+            {error}
+          </div>
+        )}
+
+        <Button type="submit" loading={loading} className="w-full h-[44px] text-[15px]" size="lg">
+          {t("Reset password")}
+        </Button>
+      </form>
+
+      <div className="mt-6 text-center">
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-1.5 text-[13px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+        >
+          <ArrowLeft size={15} />
+          {t("Back to login")}
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordForm />
+    </Suspense>
+  );
+}

@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 import { Loader2, MessageSquare } from "lucide-react";
 
 import { bookApi, openBookSocket } from "@/lib/book-api";
+import { useAuth } from "@/context/AuthContext";
 import type {
   Block,
   BlockType,
@@ -85,6 +86,9 @@ function BookPageInner() {
     string | null
   >(null);
   const [chatOpen, setChatOpen] = useState(false);
+
+  const { isAdmin, isManager } = useAuth();
+  const canManage = isAdmin || isManager;
 
   // Phase 5 — live BookEngine progress timeline state.
   const [progress, dispatchProgress] = useReducer(
@@ -413,9 +417,9 @@ function BookPageInner() {
             <BookLibrary
               books={books}
               loading={loadingBooks}
-              onNewBook={handleNewBook}
+              onNewBook={canManage ? handleNewBook : undefined}
               onSelectBook={(id) => void handleSelectBook(id)}
-              onDeleteBook={(id) => void handleDeleteBook(id)}
+              onDeleteBook={canManage ? (id) => void handleDeleteBook(id) : undefined}
             />
           )}
 
@@ -427,10 +431,10 @@ function BookPageInner() {
                 </div>
               )}
               <BookCreator
-                onCreate={handleCreate}
+                onCreate={canManage ? handleCreate : undefined}
                 loading={creating}
                 proposal={pendingProposal}
-                onConfirmProposal={handleConfirmProposal}
+                onConfirmProposal={canManage ? handleConfirmProposal : undefined}
                 confirmLoading={confirmingProposal}
               />
             </div>
@@ -441,7 +445,7 @@ function BookPageInner() {
               <div className="flex-1 overflow-hidden">
                 <SpineEditor
                   spine={detail.spine}
-                  onConfirm={handleConfirmSpine}
+                  onConfirm={canManage ? handleConfirmSpine : undefined}
                   loading={confirmingSpine}
                 />
               </div>
@@ -465,20 +469,20 @@ function BookPageInner() {
                 loading={
                   !!compilingPageId && compilingPageId === selectedPage?.id
                 }
-                onRegenerateBlock={(block) => void handleRegenerateBlock(block)}
-                onDeleteBlock={(block) => void handleDeleteBlock(block)}
-                onMoveBlock={(block, dir) => void handleMoveBlock(block, dir)}
-                onChangeBlockType={(block, t) =>
-                  void handleChangeBlockType(block, t)
+                canManage={canManage}
+                onRegenerateBlock={canManage ? (block) => void handleRegenerateBlock(block) : undefined}
+                onDeleteBlock={canManage ? (block) => void handleDeleteBlock(block) : undefined}
+                onMoveBlock={canManage ? (block, dir) => void handleMoveBlock(block, dir) : undefined}
+                onChangeBlockType={canManage ? (block, t) =>
+                  void handleChangeBlockType(block, t) : undefined
                 }
-                onInsertBlock={(t) => handleInsertBlock(t)}
-                onDeepDive={(topic, blockId) => handleDeepDive(topic, blockId)}
+                onInsertBlock={canManage ? (t) => handleInsertBlock(t) : undefined}
+                onDeepDive={canManage ? (topic, blockId) => handleDeepDive(topic, blockId) : undefined}
                 onQuizAttempt={(block, args) =>
                   void handleQuizAttempt(block, args)
                 }
                 pendingDeepDiveTopic={pendingDeepDiveTopic}
-                onRecompile={
-                  selectedPage
+                onRecompile={canManage && selectedPage
                     ? () => void compilePage(selectedPage.id, true)
                     : undefined
                 }

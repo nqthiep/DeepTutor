@@ -16,6 +16,7 @@ from uuid import uuid4
 from fastapi import (
     APIRouter,
     BackgroundTasks,
+    Depends,
     File,
     Form,
     HTTPException,
@@ -40,6 +41,7 @@ from deeptutor.services.rag.factory import DEFAULT_PROVIDER
 from deeptutor.services.rag.file_routing import FileTypeRouter
 from deeptutor.utils.document_validator import DocumentValidator
 from deeptutor.utils.error_utils import format_exception_message
+from deeptutor.services.auth.dependencies import get_current_user, require_role
 
 # Initialize logger with config
 config = load_config_with_main("main.yaml", PROJECT_ROOT)
@@ -495,7 +497,7 @@ async def run_upload_processing_task(
 
 
 @router.get("/health")
-async def health_check():
+async def health_check(user: dict = Depends(get_current_user)):
     """Health check endpoint"""
     try:
         manager = get_kb_manager()
@@ -514,7 +516,7 @@ async def health_check():
 
 
 @router.get("/rag-providers")
-async def get_rag_providers():
+async def get_rag_providers(user: dict = Depends(get_current_user)):
     """Get list of available RAG providers."""
     try:
         from deeptutor.services.rag.service import RAGService
@@ -527,7 +529,7 @@ async def get_rag_providers():
 
 
 @router.get("/supported-file-types", response_model=SupportedFileTypesInfo)
-async def get_supported_file_types():
+async def get_supported_file_types(user: dict = Depends(get_current_user)):
     """Return the current upload policy so the web client stays in sync."""
     extensions = sorted(FileTypeRouter.get_supported_extensions())
     return SupportedFileTypesInfo(
@@ -539,7 +541,7 @@ async def get_supported_file_types():
 
 
 @router.get("/configs")
-async def get_all_kb_configs():
+async def get_all_kb_configs(user: dict = Depends(get_current_user)):
     """Get all knowledge base configurations from centralized config file."""
     try:
         from deeptutor.services.config import get_kb_config_service
@@ -552,7 +554,7 @@ async def get_all_kb_configs():
 
 
 @router.get("/{kb_name}/config")
-async def get_kb_config(kb_name: str):
+async def get_kb_config(kb_name: str, user: dict = Depends(get_current_user)):
     """Get configuration for a specific knowledge base."""
     try:
         from deeptutor.services.config import get_kb_config_service
@@ -566,7 +568,7 @@ async def get_kb_config(kb_name: str):
 
 
 @router.put("/{kb_name}/config")
-async def update_kb_config(kb_name: str, config: dict):
+async def update_kb_config(kb_name: str, config: dict, user: dict = Depends(require_role("administrator", "manager"))):
     """Update configuration for a specific knowledge base."""
     try:
         from deeptutor.services.config import get_kb_config_service
@@ -585,7 +587,7 @@ async def update_kb_config(kb_name: str, config: dict):
 
 
 @router.post("/configs/sync")
-async def sync_configs_from_metadata():
+async def sync_configs_from_metadata(user: dict = Depends(require_role("administrator", "manager"))):
     """Sync all KB configurations from their metadata.json files to centralized config."""
     try:
         from deeptutor.services.config import get_kb_config_service
@@ -599,7 +601,7 @@ async def sync_configs_from_metadata():
 
 
 @router.get("/default")
-async def get_default_kb():
+async def get_default_kb(user: dict = Depends(get_current_user)):
     """Get the default knowledge base."""
     try:
         manager = get_kb_manager()
@@ -611,7 +613,7 @@ async def get_default_kb():
 
 
 @router.put("/default/{kb_name}")
-async def set_default_kb(kb_name: str):
+async def set_default_kb(kb_name: str, user: dict = Depends(require_role("administrator", "manager"))):
     """Set the default knowledge base."""
     try:
         manager = get_kb_manager()
@@ -630,7 +632,7 @@ async def set_default_kb(kb_name: str):
 
 
 @router.get("/list", response_model=list[KnowledgeBaseInfo])
-async def list_knowledge_bases():
+async def list_knowledge_bases(user: dict = Depends(get_current_user)):
     """List all available knowledge bases with their details."""
     try:
         manager = get_kb_manager()
@@ -708,7 +710,7 @@ async def list_knowledge_bases():
 
 
 @router.get("/{kb_name}")
-async def get_knowledge_base_details(kb_name: str):
+async def get_knowledge_base_details(kb_name: str, user: dict = Depends(get_current_user)):
     """Get detailed info for a specific KB."""
     try:
         manager = get_kb_manager()
@@ -728,7 +730,7 @@ def _resolve_kb_raw_dir(kb_name: str) -> Path:
 
 
 @router.get("/{kb_name}/files")
-async def list_kb_raw_files(kb_name: str):
+async def list_kb_raw_files(kb_name: str, user: dict = Depends(get_current_user)):
     """List raw documents stored under data/knowledge_bases/<kb>/raw/."""
     raw_dir = _resolve_kb_raw_dir(kb_name)
     if not raw_dir.exists() or not raw_dir.is_dir():
@@ -755,7 +757,7 @@ async def list_kb_raw_files(kb_name: str):
 
 
 @router.get("/{kb_name}/files/{filename:path}")
-async def serve_kb_raw_file(kb_name: str, filename: str):
+async def serve_kb_raw_file(kb_name: str, filename: str, user: dict = Depends(get_current_user)):
     """Serve a single raw document for inline preview / download.
 
     Resolution is sandboxed to the KB's raw/ directory; any path that
@@ -785,7 +787,7 @@ async def serve_kb_raw_file(kb_name: str, filename: str):
 
 
 @router.delete("/{kb_name}")
-async def delete_knowledge_base(kb_name: str):
+async def delete_knowledge_base(kb_name: str, user: dict = Depends(require_role("administrator", "manager"))):
     """Delete a knowledge base."""
     try:
         manager = get_kb_manager()
@@ -801,7 +803,7 @@ async def delete_knowledge_base(kb_name: str):
 
 
 @router.get("/tasks/{task_id}/stream")
-async def stream_task_logs(task_id: str):
+async def stream_task_logs(task_id: str, user: dict = Depends(get_current_user)):
     """Stream task-specific logs for knowledge-base operations."""
     manager = get_task_stream_manager()
     manager.ensure_task(task_id)
@@ -818,6 +820,7 @@ async def upload_files(
     background_tasks: BackgroundTasks,
     files: list[UploadFile] = File(...),
     rag_provider: str = Form(None),
+    user: dict = Depends(require_role("administrator", "manager")),
 ):
     """Upload files to a knowledge base and process them in background."""
     try:
@@ -883,6 +886,7 @@ async def create_knowledge_base(
     name: str = Form(...),
     files: list[UploadFile] = File(...),
     rag_provider: str = Form(DEFAULT_PROVIDER),
+    user: dict = Depends(require_role("administrator", "manager")),
 ):
     """Create a new knowledge base and initialize it with files."""
     try:
@@ -1098,6 +1102,7 @@ async def run_reindex_task(
 async def reindex_knowledge_base(
     kb_name: str,
     background_tasks: BackgroundTasks,
+    user: dict = Depends(require_role("administrator", "manager")),
 ):
     """Re-index ``kb_name`` against the currently-active embedding model.
 
@@ -1175,7 +1180,7 @@ async def reindex_knowledge_base(
 
 
 @router.get("/{kb_name}/progress")
-async def get_progress(kb_name: str):
+async def get_progress(kb_name: str, user: dict = Depends(get_current_user)):
     """Get initialization progress for a knowledge base"""
     try:
         progress_tracker = ProgressTracker(kb_name, _kb_base_dir)
@@ -1190,7 +1195,7 @@ async def get_progress(kb_name: str):
 
 
 @router.post("/{kb_name}/progress/clear")
-async def clear_progress(kb_name: str):
+async def clear_progress(kb_name: str, user: dict = Depends(require_role("administrator", "manager"))):
     """Clear progress file for a knowledge base (useful for stuck states)"""
     try:
         progress_tracker = ProgressTracker(kb_name, _kb_base_dir)
@@ -1335,7 +1340,7 @@ async def websocket_progress(websocket: WebSocket, kb_name: str):
 
 
 @router.post("/{kb_name}/link-folder", response_model=LinkedFolderInfo)
-async def link_folder(kb_name: str, request: LinkFolderRequest):
+async def link_folder(kb_name: str, request: LinkFolderRequest, user: dict = Depends(require_role("administrator", "manager"))):
     """
     Link a local folder to a knowledge base.
 
@@ -1362,7 +1367,7 @@ async def link_folder(kb_name: str, request: LinkFolderRequest):
 
 
 @router.get("/{kb_name}/linked-folders", response_model=list[LinkedFolderInfo])
-async def get_linked_folders(kb_name: str):
+async def get_linked_folders(kb_name: str, user: dict = Depends(get_current_user)):
     """Get list of linked folders for a knowledge base."""
     try:
         manager = get_kb_manager()
@@ -1375,7 +1380,7 @@ async def get_linked_folders(kb_name: str):
 
 
 @router.delete("/{kb_name}/linked-folders/{folder_id}")
-async def unlink_folder(kb_name: str, folder_id: str):
+async def unlink_folder(kb_name: str, folder_id: str, user: dict = Depends(require_role("administrator", "manager"))):
     """Unlink a folder from a knowledge base."""
     try:
         manager = get_kb_manager()
@@ -1391,7 +1396,7 @@ async def unlink_folder(kb_name: str, folder_id: str):
 
 
 @router.post("/{kb_name}/sync-folder/{folder_id}")
-async def sync_folder(kb_name: str, folder_id: str, background_tasks: BackgroundTasks):
+async def sync_folder(kb_name: str, folder_id: str, background_tasks: BackgroundTasks, user: dict = Depends(require_role("administrator", "manager"))):
     """
     Sync files from a linked folder to the knowledge base.
 

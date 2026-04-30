@@ -130,9 +130,9 @@ function paletteFor(id: string) {
 export interface BookLibraryProps {
   books: Book[];
   loading: boolean;
-  onNewBook: () => void;
+  onNewBook?: () => void;
   onSelectBook: (id: string) => void;
-  onDeleteBook: (id: string) => void;
+  onDeleteBook?: (id: string) => void;
 }
 
 export default function BookLibrary({
@@ -196,14 +196,16 @@ export default function BookLibrary({
               className="h-8 w-56 rounded-md border border-[var(--border)] bg-[var(--secondary)]/30 pl-7 pr-2.5 text-xs text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/60 focus:border-[var(--primary)]/40 focus:outline-none"
             />
           </div>
-          <button
-            type="button"
-            onClick={onNewBook}
-            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
-          >
-            <Plus size={13} />
-            New book
-          </button>
+          {onNewBook && (
+            <button
+              type="button"
+              onClick={onNewBook}
+              className="inline-flex items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
+            >
+              <Plus size={13} />
+              New book
+            </button>
+          )}
         </div>
       </header>
 
@@ -348,30 +350,32 @@ export default function BookLibrary({
                       />
                       {status.label}
                     </span>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (isPendingDelete) {
-                          onDeleteBook(book.id);
-                          setPendingDeleteId(null);
-                        } else {
-                          setPendingDeleteId(book.id);
+                    {onDeleteBook && (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (isPendingDelete) {
+                            onDeleteBook(book.id);
+                            setPendingDeleteId(null);
+                          } else {
+                            setPendingDeleteId(book.id);
+                          }
+                        }}
+                        title={
+                          isPendingDelete
+                            ? "Click again to confirm"
+                            : "Delete book"
                         }
-                      }}
-                      title={
-                        isPendingDelete
-                          ? "Click again to confirm"
-                          : "Delete book"
-                      }
-                      className={`absolute right-2 top-2 rounded-md p-1.5 transition-colors ${
-                        isPendingDelete
-                          ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
-                          : "bg-white/60 text-[var(--muted-foreground)] opacity-0 backdrop-blur-sm hover:bg-rose-500/10 hover:text-rose-600 group-hover:opacity-100 dark:bg-black/30 dark:hover:text-rose-400"
-                      }`}
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                        className={`absolute right-2 top-2 rounded-md p-1.5 transition-colors ${
+                          isPendingDelete
+                            ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                            : "text-[var(--muted-foreground)]/40 opacity-0 group-hover/card:opacity-100 hover:text-rose-500"
+                        }`}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
 
                   {/* Body */}
@@ -441,7 +445,7 @@ function StatCard({
   );
 }
 
-function EmptyState({ onNewBook }: { onNewBook: () => void }) {
+function EmptyState({ onNewBook }: { onNewBook?: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-[var(--border)] bg-[var(--secondary)]/30 px-8 py-16 text-center">
       <BookOpen size={28} className="text-[var(--muted-foreground)]/50" />

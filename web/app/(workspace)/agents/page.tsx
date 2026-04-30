@@ -21,7 +21,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import dynamic from "next/dynamic";
-import { apiUrl } from "@/lib/api";
+import { apiFetch, apiUrl } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 const MarkdownRenderer = dynamic(
   () => import("@/components/common/MarkdownRenderer"),
@@ -73,6 +74,8 @@ type BotFile = (typeof BOT_FILES)[number];
 export default function AgentsPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { isAdmin, isManager } = useAuth();
+  const canManage = isAdmin || isManager;
   const [bots, setBots] = useState<BotInfo[]>([]);
   const [souls, setSouls] = useState<SoulTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,8 +91,9 @@ export default function AgentsPage() {
   const loadBots = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(apiUrl("/api/v1/tutorbot"));
-      setBots(await res.json());
+      const res = await apiFetch("/api/v1/tutorbot");
+      const data = await res.json();
+      setBots(Array.isArray(data) ? data : []);
     } finally {
       setLoading(false);
     }
@@ -97,7 +101,7 @@ export default function AgentsPage() {
 
   const loadSouls = useCallback(async () => {
     try {
-      const res = await fetch(apiUrl("/api/v1/tutorbot/souls"));
+      const res = await apiFetch("/api/v1/tutorbot/souls");
       if (res.ok) setSouls(await res.json());
     } catch {
       /* ignore */
@@ -132,8 +136,12 @@ export default function AgentsPage() {
         <div className="mb-6 flex items-center gap-1 border-b border-[var(--border)]/50 pb-3">
           {[
             { key: "bots" as Tab, label: t("Bots"), icon: Bot },
-            { key: "profiles" as Tab, label: t("Profiles"), icon: FileText },
-            { key: "channels" as Tab, label: t("Channels"), icon: Settings2 },
+            ...(canManage
+              ? [
+                  { key: "profiles" as Tab, label: t("Profiles"), icon: FileText },
+                  { key: "channels" as Tab, label: t("Channels"), icon: Settings2 },
+                ]
+              : []),
             { key: "souls" as Tab, label: t("Soul Templates"), icon: Heart },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -163,8 +171,9 @@ export default function AgentsPage() {
             onReload={loadBots}
             onToast={setToast}
             router={router}
+            canManage={canManage}
           />
-        ) : activeTab === "profiles" ? (
+        ) : canManage && activeTab === "profiles" ? (
           <ProfilesTab
             bots={bots}
             souls={souls}
@@ -172,7 +181,7 @@ export default function AgentsPage() {
             onToast={setToast}
             onReloadSouls={loadSouls}
           />
-        ) : activeTab === "channels" ? (
+        ) : canManage && activeTab === "channels" ? (
           <ChannelsTab
             bots={bots}
             loading={loading}
@@ -180,7 +189,7 @@ export default function AgentsPage() {
             onReload={loadBots}
           />
         ) : (
-          <SoulsTab souls={souls} onReload={loadSouls} onToast={setToast} />
+          <SoulsTab souls={souls} onReload={loadSouls} onToast={setToast} canManage={canManage} />
         )}
       </div>
     </div>
@@ -496,7 +505,7 @@ function ChannelsTab({
   useEffect(() => {
     void (async () => {
       try {
-        const res = await fetch(apiUrl("/api/v1/tutorbot/channels/schema"));
+        const res = await apiFetch("/api/v1/tutorbot/channels/schema");
         if (res.ok) setSchemaCatalog(await res.json());
       } catch {
         /* leave catalog null → renders fallback message */
@@ -518,8 +527,8 @@ function ChannelsTab({
     setLoadingDetail(true);
     try {
       // Edit form needs raw secrets to populate fields. Default GET masks them.
-      const res = await fetch(
-        apiUrl(`/api/v1/tutorbot/${bid}?include_secrets=true`),
+      const res = await apiFetch(
+        `/api/v1/tutorbot/${bid}?include_secrets=true`,
       );
       if (!res.ok) return;
       const data = await res.json();
@@ -583,7 +592,7 @@ function ChannelsTab({
     if (!selectedBot) return;
     setSaving(true);
     try {
-      const res = await fetch(apiUrl(`/api/v1/tutorbot/${selectedBot}`), {
+      const res = await apiFetch(`/api/v1/tutorbot/${selectedBot}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ channels }),
@@ -822,6 +831,7 @@ function BotsTab({
   onReload,
   onToast,
   router,
+  canManage,
 }: {
   bots: BotInfo[];
   souls: SoulTemplate[];
@@ -829,6 +839,7 @@ function BotsTab({
   onReload: () => Promise<void>;
   onToast: (msg: string) => void;
   router: ReturnType<typeof useRouter>;
+  canManage: boolean;
 }) {
   const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
@@ -879,7 +890,7 @@ function BotsTab({
     if (!botId) return;
     setCreating(true);
     try {
-      const res = await fetch(apiUrl("/api/v1/tutorbot"), {
+      const res = await apiFetch("/api/v1/tutorbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -914,7 +925,7 @@ function BotsTab({
 
   const startBot = useCallback(
     async (bid: string) => {
-      const res = await fetch(apiUrl("/api/v1/tutorbot"), {
+      const res = await apiFetch("/api/v1/tutorbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bot_id: bid }),
@@ -929,7 +940,7 @@ function BotsTab({
 
   const stopBot = useCallback(
     async (bid: string) => {
-      const res = await fetch(apiUrl(`/api/v1/tutorbot/${bid}`), {
+      const res = await apiFetch(`/api/v1/tutorbot/${bid}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -951,7 +962,7 @@ function BotsTab({
         )
       )
         return;
-      const res = await fetch(apiUrl(`/api/v1/tutorbot/${bid}/destroy`), {
+      const res = await apiFetch(`/api/v1/tutorbot/${bid}/destroy`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -965,15 +976,17 @@ function BotsTab({
   return (
     <>
       {/* New Bot button */}
-      <div className="mb-4 flex justify-end">
-        <button
-          onClick={() => setShowCreate(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
-        >
-          <Plus className="h-3 w-3" />
-          {t("New Bot")}
-        </button>
-      </div>
+      {canManage && (
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={() => setShowCreate(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
+          >
+            <Plus className="h-3 w-3" />
+            {t("New Bot")}
+          </button>
+        </div>
+      )}
 
       {/* Create form */}
       {showCreate && (
@@ -1164,29 +1177,35 @@ function BotsTab({
                       <MessageCircle className="h-3 w-3" />
                       {t("Chat")}
                     </button>
-                    <button
-                      onClick={() => stopBot(bot.bot_id)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-red-400 transition-colors hover:border-red-400/50"
-                    >
-                      <Square className="h-3 w-3" />
-                      {t("Stop")}
-                    </button>
+                    {canManage && (
+                      <button
+                        onClick={() => stopBot(bot.bot_id)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-red-400 transition-colors hover:border-red-400/50"
+                      >
+                        <Square className="h-3 w-3" />
+                        {t("Stop")}
+                      </button>
+                    )}
                   </>
                 ) : (
+                  canManage && (
+                    <button
+                      onClick={() => startBot(bot.bot_id)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
+                    >
+                      <Play className="h-3 w-3" />
+                      {t("Start")}
+                    </button>
+                  )
+                )}
+                {canManage && (
                   <button
-                    onClick={() => startBot(bot.bot_id)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
+                    onClick={() => destroyBot(bot.bot_id, bot.name)}
+                    className="inline-flex items-center justify-center rounded-lg border border-[var(--border)]/50 p-1.5 text-[var(--muted-foreground)]/50 transition-colors hover:border-red-400/50 hover:text-red-400"
                   >
-                    <Play className="h-3 w-3" />
-                    {t("Start")}
+                    <Trash2 className="h-3 w-3" />
                   </button>
                 )}
-                <button
-                  onClick={() => destroyBot(bot.bot_id, bot.name)}
-                  className="inline-flex items-center justify-center rounded-lg border border-[var(--border)]/50 p-1.5 text-[var(--muted-foreground)]/50 transition-colors hover:border-red-400/50 hover:text-red-400"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
               </div>
             </div>
           ))}
@@ -1256,7 +1275,7 @@ function ProfilesTab({
       if (!bid) return;
       setLoadingFiles(true);
       try {
-        const res = await fetch(apiUrl(`/api/v1/tutorbot/${bid}/files`));
+        const res = await apiFetch(`/api/v1/tutorbot/${bid}/files`);
         const data: Record<string, string> = await res.json();
         setFiles(data);
         setEditor(data[activeFile] ?? "");
@@ -1330,8 +1349,8 @@ function ProfilesTab({
             onToast(t("No template selected to update"));
             return false;
           }
-          const tplRes = await fetch(
-            apiUrl(`/api/v1/tutorbot/souls/${sourceSoulTemplate.id}`),
+          const tplRes = await apiFetch(
+            `/api/v1/tutorbot/souls/${sourceSoulTemplate.id}`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
@@ -1369,7 +1388,7 @@ function ProfilesTab({
             soulId = `${baseId}-${n}`;
             n += 1;
           }
-          const tplRes = await fetch(apiUrl("/api/v1/tutorbot/souls"), {
+          const tplRes = await apiFetch("/api/v1/tutorbot/souls", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1392,8 +1411,8 @@ function ProfilesTab({
         }
       }
 
-      const res = await fetch(
-        apiUrl(`/api/v1/tutorbot/${selectedBot}/files/${activeFile}`),
+      const res = await apiFetch(
+        `/api/v1/tutorbot/${selectedBot}/files/${activeFile}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -1403,7 +1422,7 @@ function ProfilesTab({
       if (res.ok) {
         setFiles((prev) => ({ ...prev, [activeFile]: editor }));
         if (activeFile === "SOUL.md") {
-          const personaRes = await fetch(apiUrl(`/api/v1/tutorbot/${selectedBot}`), {
+          const personaRes = await apiFetch(`/api/v1/tutorbot/${selectedBot}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ persona: editor }),
@@ -1757,10 +1776,12 @@ function SoulsTab({
   souls,
   onReload,
   onToast,
+  canManage,
 }: {
   souls: SoulTemplate[];
   onReload: () => Promise<void>;
   onToast: (msg: string) => void;
+  canManage: boolean;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<string | null>(null);
@@ -1796,7 +1817,7 @@ function SoulsTab({
     if (!editing) return;
     setSaving(true);
     try {
-      const res = await fetch(apiUrl(`/api/v1/tutorbot/souls/${editing}`), {
+      const res = await apiFetch(`/api/v1/tutorbot/souls/${editing}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: editName.trim(), content: editContent }),
@@ -1821,7 +1842,7 @@ function SoulsTab({
     if (!id) return;
     setSaving(true);
     try {
-      const res = await fetch(apiUrl("/api/v1/tutorbot/souls"), {
+      const res = await apiFetch("/api/v1/tutorbot/souls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, name, content: newContent }),
@@ -1844,7 +1865,7 @@ function SoulsTab({
     async (soul: SoulTemplate) => {
       if (!window.confirm(t('Delete soul "{{name}}"?', { name: soul.name })))
         return;
-      const res = await fetch(apiUrl(`/api/v1/tutorbot/souls/${soul.id}`), {
+      const res = await apiFetch(`/api/v1/tutorbot/souls/${soul.id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -1873,13 +1894,15 @@ function SoulsTab({
         <p className="text-[13px] text-[var(--muted-foreground)]">
           {t("Reusable soul templates for creating TutorBots.")}
         </p>
-        <button
-          onClick={startCreate}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
-        >
-          <Plus className="h-3 w-3" />
-          {t("New Soul")}
-        </button>
+        {canManage && (
+          <button
+            onClick={startCreate}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
+          >
+            <Plus className="h-3 w-3" />
+            {t("New Soul")}
+          </button>
+        )}
       </div>
 
       {/* Create form */}
@@ -2045,18 +2068,22 @@ function SoulsTab({
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => startEdit(soul)}
-                    className="inline-flex items-center justify-center rounded-lg border border-[var(--border)]/50 p-1.5 text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </button>
-                  <button
-                    onClick={() => deleteSoul(soul)}
-                    className="inline-flex items-center justify-center rounded-lg border border-[var(--border)]/50 p-1.5 text-[var(--muted-foreground)] transition-colors hover:border-red-400/50 hover:text-red-400"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  {canManage && (
+                    <button
+                      onClick={() => startEdit(soul)}
+                      className="inline-flex items-center justify-center rounded-lg border border-[var(--border)]/50 p-1.5 text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  )}
+                  {canManage && (
+                    <button
+                      onClick={() => deleteSoul(soul)}
+                      className="inline-flex items-center justify-center rounded-lg border border-[var(--border)]/50 p-1.5 text-[var(--muted-foreground)] transition-colors hover:border-red-400/50 hover:text-red-400"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               </div>
             ),

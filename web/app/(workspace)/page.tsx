@@ -2,15 +2,20 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 /**
  * Root page now redirects to /chat.
  * Handles backward compatibility for /?session=xxx URLs.
+ * Waits for auth to resolve before redirecting.
  */
 export default function HomePage() {
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
+    if (isLoading || !isAuthenticated) return;
+
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session");
     const capability = params.get("capability");
@@ -24,7 +29,7 @@ export default function HomePage() {
     if (query.length) target += `?${query.join("&")}`;
 
     router.replace(target);
-  }, [router]);
+  }, [isLoading, isAuthenticated, router]);
 
   return null;
 }

@@ -109,3 +109,66 @@ export function wsUrl(path: string): string {
 
   return `${normalizedBase}${normalizedPath}`;
 }
+
+/**
+ * Fetch with automatic Authorization header and 401 refresh.
+ * Wraps the native fetch to attach the Bearer token from auth-api
+ * and silently refresh the access token when the server returns 401.
+ */
+function getStoredAccessToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("deeptutor.access_token");
+}
+
+export async function apiFetch(
+  path: string,
+  options: RequestInit = {},
+): Promise<Response> {
+  const token = getStoredAccessToken();
+  const headers = new Headers(options.headers);
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  if (!headers.has("Content-Type") && options.body) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const res = await fetch(apiUrl(path), { ...options, headers });
+
+  if (res.status === 401 && token) {
+    // Try token refresh
+    const refreshToken = getStoredRefreshToken();
+    if (refreshToken) {
+      try {
+        const refreshRes = await fetch(apiUrl("/api/v1/auth/refresh"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+        if (refreshRes.ok) {
+          const { access_token } = await refreshRes.json();
+          const { storeTokens } = await import("@/lib/auth-api");
+          storeTokens({ access_token, refresh_token: refreshToken });
+          // Retry with new token
+          headers.set("Authorization", `Bearer ${access_token}`);
+          return fetch(apiUrl(path), { ...options, headers });
+        }
+      } catch {
+        // Refresh failed – clear tokens
+      }
+    }
+    const { clearTokens } = await import("@/lib/auth-api");
+    clearTokens();
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+  }
+
+  return res;
+}
+
+function getStoredRefreshToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("deeptutor.refresh_token");
+}

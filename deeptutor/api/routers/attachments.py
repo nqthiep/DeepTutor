@@ -21,9 +21,10 @@ import logging
 import mimetypes
 from urllib.parse import quote
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
+from deeptutor.services.auth.dependencies import get_current_user
 from deeptutor.services.storage import (
     LocalDiskAttachmentStore,
     get_attachment_store,
@@ -56,6 +57,7 @@ async def get_attachment(
     session_id: str,
     attachment_id: str,
     filename: str,
+    user: dict = Depends(get_current_user),
 ):
     """Serve a previously uploaded chat attachment.
 

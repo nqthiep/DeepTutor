@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode } from "react";
 import { useAppShell } from "@/context/AppShellContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   BookOpen,
   Bot,
@@ -17,12 +18,14 @@ import {
   PenLine,
   Plus,
   Settings,
+  Shield,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SessionList from "@/components/SessionList";
 import { TutorBotRecent } from "@/components/sidebar/TutorBotRecent";
 import { VersionBadge } from "@/components/sidebar/VersionBadge";
+import ProfilePopover from "@/components/sidebar/ProfilePopover";
 import type { SessionSummary } from "@/lib/session-api";
 
 interface NavEntry {
@@ -38,6 +41,10 @@ const PRIMARY_NAV: NavEntry[] = [
   { href: "/book", label: "Book", icon: Library },
   { href: "/knowledge", label: "Knowledge", icon: BookOpen },
   { href: "/space", label: "Space", icon: LayoutGrid },
+];
+
+const ADMIN_NAV: NavEntry[] = [
+  { href: "/admin", label: "Admin", icon: Shield },
 ];
 
 const SECONDARY_NAV: NavEntry[] = [
@@ -76,6 +83,12 @@ export function SidebarShell({
   const { t } = useTranslation();
   const { sidebarCollapsed: collapsed, setSidebarCollapsed: setCollapsed } =
     useAppShell();
+
+  const { user, isAdmin } = useAuth();
+
+  const userInitial = (user?.display_name || user?.email || "U").charAt(0).toUpperCase();
+  const userName = user?.display_name || user?.email?.split("@")[0] || "User";
+  const userEmail = user?.email || "";
 
   const handleNewChat = () => {
     if (onNewChat) {
@@ -148,6 +161,26 @@ export function SidebarShell({
               </Link>
             );
           })}
+          {isAdmin && ADMIN_NAV.map((item) => {
+            const active = pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={t(item.label) as string}
+                className={`relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150 ${
+                  active
+                    ? "bg-[var(--background)]/80 text-[var(--foreground)] shadow-sm"
+                    : "text-[var(--muted-foreground)] hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
+                }`}
+              >
+                {active && (
+                  <span className="absolute -left-1.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[var(--foreground)]/80" />
+                )}
+                <item.icon size={18} strokeWidth={active ? 2 : 1.6} />
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="flex-1" />
@@ -187,6 +220,20 @@ export function SidebarShell({
             <Github size={15} strokeWidth={1.6} />
           </a>
           <VersionBadge collapsed />
+
+          {/* Avatar — collapsed */}
+          <div className="group/avatar relative mt-1">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)]/15 text-[var(--primary)] text-sm font-semibold">
+              {userInitial}
+            </div>
+            {/* Tooltip on hover */}
+            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover/avatar:block z-50">
+              <div className="bg-[var(--popover)] border border-[var(--border)] rounded-lg px-3 py-2 shadow-lg whitespace-nowrap">
+                <p className="text-[13px] font-medium text-[var(--foreground)]">{userName}</p>
+                <p className="text-[11px] text-[var(--muted-foreground)]">{userEmail}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
     );
@@ -271,14 +318,32 @@ export function SidebarShell({
               </div>
             );
           })}
+          {isAdmin && ADMIN_NAV.map((item) => {
+            const active = pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] transition-colors ${
+                  active
+                    ? "bg-[var(--background)]/70 font-medium text-[var(--foreground)]"
+                    : "text-[var(--muted-foreground)] hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
+                }`}
+              >
+                <item.icon size={16} strokeWidth={active ? 1.9 : 1.5} />
+                <span>{t(item.label)}</span>
+              </Link>
+            );
+          })}
         </div>
       </nav>
 
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Secondary nav + footer */}
-      <div className="border-t border-[var(--border)]/40 px-2 py-2">
+      {/* User & Settings group */}
+      <div className="border-t border-[var(--border)]/40 px-2 py-2 space-y-0.5">
+        <ProfilePopover />
         {SECONDARY_NAV.map((item) => {
           const active = pathname.startsWith(item.href);
           return (
@@ -297,7 +362,7 @@ export function SidebarShell({
           );
         })}
         {footerSlot}
-        <div className="mt-0.5 flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5 pt-1">
           <VersionBadge />
           <a
             href={GITHUB_REPO_URL}

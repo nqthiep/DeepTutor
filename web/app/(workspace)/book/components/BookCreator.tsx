@@ -48,7 +48,7 @@ type ParentMap<
 > = Map<TParent, ParentSelection<TChild>>;
 
 export interface BookCreatorProps {
-  onCreate: (payload: {
+  onCreate?: (payload: {
     user_intent: string;
     chat_session_id: string;
     chat_selections: Array<{ session_id: string; message_ids: number[] }>;
@@ -315,6 +315,7 @@ export default function BookCreator({
       });
     });
 
+    if (!onCreate) return;
     await onCreate({
       user_intent: intent,
       chat_session_id: "",

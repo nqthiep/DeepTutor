@@ -14,11 +14,12 @@ import re
 import time
 from typing import Any, AsyncGenerator
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from deeptutor.logging import ConsoleFormatter
+from deeptutor.services.auth.dependencies import get_current_user, require_role
 from deeptutor.runtime.registry.capability_registry import get_capability_registry
 from deeptutor.runtime.registry.tool_registry import get_tool_registry
 
@@ -51,7 +52,7 @@ class CapabilityExecuteRequest(BaseModel):
 
 
 @router.get("/list")
-async def list_plugins():
+async def list_plugins(user: dict = Depends(require_role("administrator"))):
     tool_registry = get_tool_registry()
     capability_registry = get_capability_registry()
     plugin_manifests = _discover_plugins()
@@ -97,7 +98,7 @@ async def list_plugins():
 
 
 @router.post("/tools/{tool_name}/execute")
-async def execute_tool(tool_name: str, body: ToolExecuteRequest):
+async def execute_tool(tool_name: str, body: ToolExecuteRequest, user: dict = Depends(require_role("administrator"))):
     """Execute a single tool with explicit parameters (for Playground testing)."""
     registry = get_tool_registry()
     tool = registry.get(tool_name)
@@ -267,7 +268,7 @@ async def _execute_stream(tool_name: str, params: dict[str, Any]) -> AsyncGenera
 
 
 @router.post("/tools/{tool_name}/execute-stream")
-async def execute_tool_stream(tool_name: str, body: ToolExecuteRequest):
+async def execute_tool_stream(tool_name: str, body: ToolExecuteRequest, user: dict = Depends(require_role("administrator"))):
     """Execute a tool and stream logs + result as SSE."""
     return StreamingResponse(
         _execute_stream(tool_name, body.params),
@@ -396,6 +397,7 @@ async def _execute_capability_stream(
 async def execute_capability_stream(
     capability_name: str,
     body: CapabilityExecuteRequest,
+    user: dict = Depends(require_role("administrator")),
 ):
     """Execute a capability and stream logs + trace + final result as SSE."""
     return StreamingResponse(

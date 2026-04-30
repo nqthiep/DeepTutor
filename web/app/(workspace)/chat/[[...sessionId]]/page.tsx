@@ -37,6 +37,7 @@ import {
 import { useAppShell } from "@/context/AppShellContext";
 import type { FilePreviewSource } from "@/components/chat/preview/previewerFor";
 import type { StreamEvent } from "@/lib/unified-ws";
+import { useAuth } from "@/context/AuthContext";
 import {
   extractBase64FromDataUrl,
   readFileAsDataUrl,
@@ -186,6 +187,7 @@ const CAPABILITIES: CapabilityDef[] = [
     allowedTools: ["rag", "web_search", "code_execution"],
     defaultTools: ["rag", "web_search", "code_execution"],
   },
+  // Deep Research is available only for admin/manager (filtered in the component)
   {
     value: "deep_research",
     label: "Deep Research",
@@ -243,6 +245,11 @@ export default function ChatPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const sessionIdParam = params.sessionId?.[0] ?? null;
+  const { isAdmin, isManager } = useAuth();
+  const visibleCapabilities = useMemo(
+    () => (isAdmin || isManager ? CAPABILITIES : CAPABILITIES.filter((c) => c.value !== "deep_research")),
+    [isAdmin, isManager],
+  );
   const { setActiveSessionId } = useAppShell();
 
   const {
@@ -1217,7 +1224,7 @@ export default function ChatPage() {
           researchConfig={researchConfig}
           researchValidationErrors={researchValidation.errors}
           panelCollapsed={panelCollapsed}
-          capabilities={CAPABILITIES}
+          capabilities={visibleCapabilities}
           researchSources={RESEARCH_SOURCES}
           onSetCapMenuOpen={setCapMenuOpen}
           onSetToolMenuOpen={setToolMenuOpen}

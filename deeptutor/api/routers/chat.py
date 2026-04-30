@@ -6,9 +6,10 @@ WebSocket endpoint for lightweight chat with session management.
 REST endpoints for session operations.
 """
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 
 from deeptutor.agents.chat import ChatAgent, SessionManager
+from deeptutor.services.auth.dependencies import get_current_user
 from deeptutor.logging import get_logger
 from deeptutor.services.config import PROJECT_ROOT, load_config_with_main
 from deeptutor.services.llm.config import get_llm_config
@@ -31,7 +32,7 @@ session_manager = SessionManager()
 
 
 @router.get("/chat/sessions")
-async def list_sessions(limit: int = 20):
+async def list_sessions(limit: int = 20, user: dict = Depends(get_current_user)):
     """
     List recent chat sessions.
 
@@ -45,7 +46,7 @@ async def list_sessions(limit: int = 20):
 
 
 @router.get("/chat/sessions/{session_id}")
-async def get_session(session_id: str):
+async def get_session(session_id: str, user: dict = Depends(get_current_user)):
     """
     Get a specific chat session with full message history.
 
@@ -62,7 +63,7 @@ async def get_session(session_id: str):
 
 
 @router.delete("/chat/sessions/{session_id}")
-async def delete_session(session_id: str):
+async def delete_session(session_id: str, user: dict = Depends(get_current_user)):
     """
     Delete a chat session.
 

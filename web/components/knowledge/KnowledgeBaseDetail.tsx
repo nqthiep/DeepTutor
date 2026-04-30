@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Database,
@@ -30,6 +30,7 @@ interface KnowledgeBaseDetailProps {
   uploadPolicy: KnowledgeUploadPolicy;
   task?: TaskState;
   history: HistoryEntry[];
+  canManage: boolean;
   onCreate: () => void;
   onUpload: (kbName: string, files: File[]) => Promise<void>;
   onReindex: (kbName: string) => Promise<void>;
@@ -57,6 +58,7 @@ export default function KnowledgeBaseDetail({
   uploadPolicy,
   task,
   history,
+  canManage,
   onCreate,
   onUpload,
   onReindex,
@@ -66,6 +68,10 @@ export default function KnowledgeBaseDetail({
 }: KnowledgeBaseDetailProps) {
   const { t } = useTranslation();
   const [section, setSection] = useState<DetailSection>("files");
+  const visibleSections = useMemo(
+    () => SECTIONS.filter((s) => canManage || (s.key !== "add" && s.key !== "settings")),
+    [canManage],
+  );
 
   if (!kb) {
     return (
@@ -82,13 +88,15 @@ export default function KnowledgeBaseDetail({
               "Pick a knowledge base from the list, or create a new one to get started.",
             )}
           </p>
-          <button
-            type="button"
-            onClick={onCreate}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
-          >
-            {t("Create your first knowledge base")}
-          </button>
+          {canManage && onCreate && (
+            <button
+              type="button"
+              onClick={onCreate}
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
+            >
+              {t("Create your first knowledge base")}
+            </button>
+          )}
         </div>
       </main>
     );
@@ -135,7 +143,7 @@ export default function KnowledgeBaseDetail({
 
         {/* Section nav */}
         <nav className="-mb-3 mt-3 flex gap-1 overflow-x-auto">
-          {SECTIONS.map(({ key, label, Icon }) => {
+          {visibleSections.map(({ key, label, Icon }) => {
             const active = section === key;
             return (
               <button

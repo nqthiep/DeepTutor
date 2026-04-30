@@ -10,9 +10,10 @@ Mounted at ``/api/v1/skills``.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from deeptutor.services.auth.dependencies import get_current_user, require_role
 from deeptutor.services.skill import get_skill_service
 from deeptutor.services.skill.service import (
     InvalidSkillNameError,
@@ -52,13 +53,13 @@ class RenameTagRequest(BaseModel):
 
 
 @router.get("/tags/list")
-async def list_tags() -> dict[str, list[str]]:
+async def list_tags(user: dict = Depends(get_current_user)) -> dict[str, list[str]]:
     service = get_skill_service()
     return {"tags": service.list_tags()}
 
 
 @router.post("/tags/create")
-async def create_tag(payload: CreateTagRequest) -> dict[str, str]:
+async def create_tag(payload: CreateTagRequest, user: dict = Depends(get_current_user)) -> dict[str, str]:
     service = get_skill_service()
     try:
         tag = service.create_tag(payload.name)
@@ -70,7 +71,7 @@ async def create_tag(payload: CreateTagRequest) -> dict[str, str]:
 
 
 @router.put("/tags/{tag}")
-async def rename_tag(tag: str, payload: RenameTagRequest) -> dict[str, str]:
+async def rename_tag(tag: str, payload: RenameTagRequest, user: dict = Depends(get_current_user)) -> dict[str, str]:
     service = get_skill_service()
     try:
         new_tag = service.rename_tag(tag, payload.rename_to)
@@ -84,7 +85,7 @@ async def rename_tag(tag: str, payload: RenameTagRequest) -> dict[str, str]:
 
 
 @router.delete("/tags/{tag}")
-async def delete_tag(tag: str) -> dict[str, str]:
+async def delete_tag(tag: str, user: dict = Depends(get_current_user)) -> dict[str, str]:
     service = get_skill_service()
     try:
         service.delete_tag(tag)
@@ -99,14 +100,14 @@ async def delete_tag(tag: str) -> dict[str, str]:
 
 
 @router.get("/list")
-async def list_skills() -> dict[str, list[dict[str, object]]]:
+async def list_skills(user: dict = Depends(get_current_user)) -> dict[str, list[dict[str, object]]]:
     service = get_skill_service()
     items = [info.to_dict() for info in service.list_skills()]
     return {"skills": items}
 
 
 @router.get("/{name}")
-async def get_skill(name: str) -> dict[str, object]:
+async def get_skill(name: str, user: dict = Depends(get_current_user)) -> dict[str, object]:
     service = get_skill_service()
     try:
         return service.get_detail(name).to_dict()
@@ -117,7 +118,7 @@ async def get_skill(name: str) -> dict[str, object]:
 
 
 @router.post("/create")
-async def create_skill(payload: CreateSkillRequest) -> dict[str, object]:
+async def create_skill(payload: CreateSkillRequest, user: dict = Depends(get_current_user)) -> dict[str, object]:
     service = get_skill_service()
     try:
         info = service.create(
@@ -136,7 +137,7 @@ async def create_skill(payload: CreateSkillRequest) -> dict[str, object]:
 
 
 @router.put("/{name}")
-async def update_skill(name: str, payload: UpdateSkillRequest) -> dict[str, object]:
+async def update_skill(name: str, payload: UpdateSkillRequest, user: dict = Depends(get_current_user)) -> dict[str, object]:
     service = get_skill_service()
     try:
         info = service.update(
@@ -158,7 +159,7 @@ async def update_skill(name: str, payload: UpdateSkillRequest) -> dict[str, obje
 
 
 @router.delete("/{name}")
-async def delete_skill(name: str) -> dict[str, str]:
+async def delete_skill(name: str, user: dict = Depends(get_current_user)) -> dict[str, str]:
     service = get_skill_service()
     try:
         service.delete(name)

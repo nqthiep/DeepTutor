@@ -8,9 +8,10 @@ import asyncio
 import json
 import logging
 
-from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, ValidationError
 
+from deeptutor.services.auth.dependencies import get_current_user, require_role
 from deeptutor.services.tutorbot import get_tutorbot_manager
 from deeptutor.services.tutorbot.manager import (
     BotConfig,
@@ -76,12 +77,12 @@ class SoulUpdateRequest(BaseModel):
 
 
 @router.get("/souls")
-async def list_souls():
+async def list_souls(user: dict = Depends(require_role("administrator"))):
     return get_tutorbot_manager().list_souls()
 
 
 @router.post("/souls")
-async def create_soul(payload: SoulCreateRequest):
+async def create_soul(payload: SoulCreateRequest, user: dict = Depends(require_role("administrator"))):
     mgr = get_tutorbot_manager()
     if mgr.get_soul(payload.id):
         raise HTTPException(status_code=409, detail=f"Soul '{payload.id}' already exists")
@@ -89,7 +90,7 @@ async def create_soul(payload: SoulCreateRequest):
 
 
 @router.get("/souls/{soul_id}")
-async def get_soul(soul_id: str):
+async def get_soul(soul_id: str, user: dict = Depends(require_role("administrator"))):
     soul = get_tutorbot_manager().get_soul(soul_id)
     if not soul:
         raise HTTPException(status_code=404, detail="Soul not found")
@@ -97,7 +98,7 @@ async def get_soul(soul_id: str):
 
 
 @router.put("/souls/{soul_id}")
-async def update_soul(soul_id: str, payload: SoulUpdateRequest):
+async def update_soul(soul_id: str, payload: SoulUpdateRequest, user: dict = Depends(require_role("administrator"))):
     result = get_tutorbot_manager().update_soul(soul_id, payload.name, payload.content)
     if not result:
         raise HTTPException(status_code=404, detail="Soul not found")
@@ -105,7 +106,7 @@ async def update_soul(soul_id: str, payload: SoulUpdateRequest):
 
 
 @router.delete("/souls/{soul_id}")
-async def delete_soul(soul_id: str):
+async def delete_soul(soul_id: str, user: dict = Depends(require_role("administrator"))):
     if not get_tutorbot_manager().delete_soul(soul_id):
         raise HTTPException(status_code=404, detail="Soul not found")
     return {"id": soul_id, "deleted": True}
@@ -115,18 +116,18 @@ async def delete_soul(soul_id: str):
 
 
 @router.get("")
-async def list_bots():
+async def list_bots(user: dict = Depends(get_current_user)):
     return get_tutorbot_manager().list_bots()
 
 
 @router.get("/recent")
-async def recent_bots(limit: int = 3):
+async def recent_bots(limit: int = 3, user: dict = Depends(get_current_user)):
     """Return the most recently active bots with their last message preview."""
     return get_tutorbot_manager().get_recent_active_bots(limit=limit)
 
 
 @router.get("/channels/schema")
-async def list_channel_schemas():
+async def list_channel_schemas(user: dict = Depends(get_current_user)):
     """Return JSON-Schema metadata for every available channel.
 
     Powers the schema-driven Channels tab in the Web UI: lets it render a
@@ -161,7 +162,7 @@ async def list_channel_schemas():
 
 
 @router.post("")
-async def create_and_start_bot(payload: CreateBotRequest):
+async def create_and_start_bot(payload: CreateBotRequest, user: dict = Depends(require_role("administrator", "manager"))):
     mgr = get_tutorbot_manager()
     # Only fields the client actually sent are forwarded as overrides; this lets
     # users explicitly clear values (e.g. ``description=""``) while *omitted*
@@ -212,22 +213,16 @@ async def get_bot(
             "admin edit form; default response masks all secret-looking fields."
         ),
     ),
+    user: dict = Depends(get_current_user),
 ):
-    mgr = get_tutorbot_manager()
-    instance = mgr.get_bot(bot_id)
-    if instance:
-        return instance.to_dict(
-            include_secrets=include_secrets,
-            mask_secrets=not include_secrets,
-        )
-    cfg = mgr.load_bot_config(bot_id)
-    if cfg:
-        return _stopped_bot_dict(bot_id, cfg, include_secrets=include_secrets)
-    raise HTTPException(status_code=404, detail="Bot not found")
+    bot = get_tutorbot_manager().get_bot(bot_id)
+    if bot is None:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    return bot.to_dict(include_secrets=include_secrets)
 
 
 @router.delete("/{bot_id}")
-async def stop_bot(bot_id: str):
+async def stop_bot(bot_id: str, user: dict = Depends(require_role("administrator"))):
     stopped = await get_tutorbot_manager().stop_bot(bot_id)
     if not stopped:
         raise HTTPException(status_code=404, detail="Bot not found or not running")
@@ -235,7 +230,7 @@ async def stop_bot(bot_id: str):
 
 
 @router.delete("/{bot_id}/destroy")
-async def destroy_bot(bot_id: str):
+async def destroy_bot(bot_id: str, user: dict = Depends(require_role("administrator"))):
     destroyed = await get_tutorbot_manager().destroy_bot(bot_id)
     if not destroyed:
         raise HTTPException(status_code=404, detail="Bot not found")
@@ -281,7 +276,7 @@ def _apply_payload(target: BotConfig | TutorBotInstance, payload: UpdateBotReque
 
 
 @router.patch("/{bot_id}")
-async def update_bot(bot_id: str, payload: UpdateBotRequest):
+async def update_bot(bot_id: str, payload: UpdateBotRequest, user: dict = Depends(require_role("administrator", "manager"))):
     if payload.channels is not None:
         _validate_channels_payload(payload.channels)
 
@@ -319,12 +314,12 @@ async def update_bot(bot_id: str, payload: UpdateBotRequest):
 
 
 @router.get("/{bot_id}/files")
-async def list_bot_files(bot_id: str):
+async def list_bot_files(bot_id: str, user: dict = Depends(get_current_user)):
     return get_tutorbot_manager().read_all_bot_files(bot_id)
 
 
 @router.get("/{bot_id}/files/{filename}")
-async def read_bot_file(bot_id: str, filename: str):
+async def read_bot_file(bot_id: str, filename: str, user: dict = Depends(get_current_user)):
     content = get_tutorbot_manager().read_bot_file(bot_id, filename)
     if content is None:
         raise HTTPException(status_code=400, detail=f"Not an editable file: {filename}")
@@ -332,7 +327,7 @@ async def read_bot_file(bot_id: str, filename: str):
 
 
 @router.put("/{bot_id}/files/{filename}")
-async def write_bot_file(bot_id: str, filename: str, payload: FileUpdateRequest):
+async def write_bot_file(bot_id: str, filename: str, payload: FileUpdateRequest, user: dict = Depends(require_role("administrator", "manager"))):
     ok = get_tutorbot_manager().write_bot_file(bot_id, filename, payload.content)
     if not ok:
         raise HTTPException(status_code=400, detail=f"Not an editable file: {filename}")
@@ -343,7 +338,7 @@ async def write_bot_file(bot_id: str, filename: str, payload: FileUpdateRequest)
 
 
 @router.get("/{bot_id}/history")
-async def get_bot_history(bot_id: str, limit: int = 100):
+async def get_bot_history(bot_id: str, limit: int = 100, user: dict = Depends(get_current_user)):
     """Read chat history from the bot's per-bot JSONL session files."""
     return get_tutorbot_manager().get_bot_history(bot_id, limit=limit)
 

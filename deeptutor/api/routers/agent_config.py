@@ -3,7 +3,9 @@
 Agent Configuration API - Provides agent metadata for data-driven UI.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+
+from deeptutor.services.auth.dependencies import get_current_user, require_role
 
 router = APIRouter()
 
@@ -33,7 +35,7 @@ AGENT_REGISTRY = {
 
 
 @router.get("/agents")
-async def get_agent_config():
+async def get_agent_config(user: dict = Depends(require_role("administrator"))):
     """
     Get agent UI configuration.
 
@@ -44,7 +46,7 @@ async def get_agent_config():
 
 
 @router.get("/agents/{agent_type}")
-async def get_single_agent_config(agent_type: str):
+async def get_single_agent_config(agent_type: str, user: dict = Depends(require_role("administrator"))):
     """
     Get UI configuration for a specific agent.
 

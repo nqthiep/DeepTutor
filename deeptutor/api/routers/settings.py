@@ -12,10 +12,11 @@ import json
 import time
 from typing import Any, List, Literal, Optional
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from deeptutor.services.auth.dependencies import get_current_user, require_role
 from deeptutor.services.config import get_config_test_runner, get_model_catalog_service
 from deeptutor.services.embedding.client import reset_embedding_client
 from deeptutor.services.llm.client import reset_llm_client
@@ -142,7 +143,7 @@ def _provider_choices() -> dict[str, list[dict[str, str]]]:
 
 
 @router.get("")
-async def get_settings():
+async def get_settings(user: dict = Depends(get_current_user)):
     return {
         "ui": load_ui_settings(),
         "catalog": get_model_catalog_service().load(),
@@ -151,19 +152,19 @@ async def get_settings():
 
 
 @router.get("/catalog")
-async def get_catalog():
+async def get_catalog(user: dict = Depends(get_current_user)):
     return {"catalog": get_model_catalog_service().load()}
 
 
 @router.put("/catalog")
-async def update_catalog(payload: CatalogPayload):
+async def update_catalog(payload: CatalogPayload, user: dict = Depends(require_role("administrator"))):
     catalog = get_model_catalog_service().save(payload.catalog)
     _invalidate_runtime_caches()
     return {"catalog": catalog}
 
 
 @router.post("/apply")
-async def apply_catalog(payload: CatalogPayload | None = None):
+async def apply_catalog(payload: CatalogPayload | None = None, user: dict = Depends(require_role("administrator"))):
     catalog = payload.catalog if payload is not None else get_model_catalog_service().load()
     rendered = get_model_catalog_service().apply(catalog)
     _invalidate_runtime_caches()
@@ -175,7 +176,7 @@ async def apply_catalog(payload: CatalogPayload | None = None):
 
 
 @router.put("/theme")
-async def update_theme(update: ThemeUpdate):
+async def update_theme(update: ThemeUpdate, user: dict = Depends(get_current_user)):
     current_ui = load_ui_settings()
     current_ui["theme"] = update.theme
     save_ui_settings(current_ui)
@@ -183,7 +184,7 @@ async def update_theme(update: ThemeUpdate):
 
 
 @router.put("/language")
-async def update_language(update: LanguageUpdate):
+async def update_language(update: LanguageUpdate, user: dict = Depends(get_current_user)):
     current_ui = load_ui_settings()
     current_ui["language"] = update.language
     save_ui_settings(current_ui)
@@ -191,7 +192,7 @@ async def update_language(update: LanguageUpdate):
 
 
 @router.put("/ui")
-async def update_ui_settings(update: UISettings):
+async def update_ui_settings(update: UISettings, user: dict = Depends(get_current_user)):
     current_ui = load_ui_settings()
     current_ui.update(update.model_dump(exclude_none=True))
     save_ui_settings(current_ui)
@@ -199,13 +200,13 @@ async def update_ui_settings(update: UISettings):
 
 
 @router.post("/reset")
-async def reset_settings():
+async def reset_settings(user: dict = Depends(get_current_user)):
     save_ui_settings(DEFAULT_UI_SETTINGS)
     return DEFAULT_UI_SETTINGS
 
 
 @router.get("/themes")
-async def get_themes():
+async def get_themes(user: dict = Depends(get_current_user)):
     return {
         "themes": [
             {"id": "snow", "name": "Snow"},
@@ -217,7 +218,7 @@ async def get_themes():
 
 
 @router.get("/sidebar")
-async def get_sidebar_settings():
+async def get_sidebar_settings(user: dict = Depends(get_current_user)):
     current_ui = load_ui_settings()
     return {
         "description": current_ui.get(
@@ -228,7 +229,7 @@ async def get_sidebar_settings():
 
 
 @router.put("/sidebar/description")
-async def update_sidebar_description(update: SidebarDescriptionUpdate):
+async def update_sidebar_description(update: SidebarDescriptionUpdate, user: dict = Depends(get_current_user)):
     current_ui = load_ui_settings()
     current_ui["sidebar_description"] = update.description
     save_ui_settings(current_ui)
@@ -236,7 +237,7 @@ async def update_sidebar_description(update: SidebarDescriptionUpdate):
 
 
 @router.put("/sidebar/nav-order")
-async def update_sidebar_nav_order(update: SidebarNavOrderUpdate):
+async def update_sidebar_nav_order(update: SidebarNavOrderUpdate, user: dict = Depends(get_current_user)):
     current_ui = load_ui_settings()
     current_ui["sidebar_nav_order"] = update.nav_order.model_dump()
     save_ui_settings(current_ui)
@@ -244,13 +245,13 @@ async def update_sidebar_nav_order(update: SidebarNavOrderUpdate):
 
 
 @router.post("/tests/{service}/start")
-async def start_service_test(service: str, payload: CatalogPayload | None = None):
+async def start_service_test(service: str, payload: CatalogPayload | None = None, user: dict = Depends(require_role("administrator"))):
     run = get_config_test_runner().start(service, payload.catalog if payload else None)
     return {"run_id": run.id}
 
 
 @router.get("/tests/{service}/{run_id}/events")
-async def stream_service_test_events(service: str, run_id: str, request: Request):
+async def stream_service_test_events(service: str, run_id: str, request: Request, user: dict = Depends(require_role("administrator"))):
     runner = get_config_test_runner()
     run = runner.get(run_id)
 
@@ -274,7 +275,7 @@ async def stream_service_test_events(service: str, run_id: str, request: Request
 
 
 @router.post("/tests/{service}/{run_id}/cancel")
-async def cancel_service_test(service: str, run_id: str):
+async def cancel_service_test(service: str, run_id: str, user: dict = Depends(require_role("administrator"))):
     get_config_test_runner().cancel(run_id)
     return {"message": "Cancelled"}
 
@@ -283,7 +284,7 @@ TOUR_CACHE = _path_service.get_settings_dir() / ".tour_cache.json"
 
 
 @router.get("/tour/status")
-async def tour_status():
+async def tour_status(user: dict = Depends(get_current_user)):
     if TOUR_CACHE.exists():
         try:
             cache = json.loads(TOUR_CACHE.read_text(encoding="utf-8"))
@@ -304,7 +305,7 @@ class TourCompletePayload(BaseModel):
 
 
 @router.post("/tour/complete")
-async def complete_tour(payload: TourCompletePayload | None = None):
+async def complete_tour(payload: TourCompletePayload | None = None, user: dict = Depends(get_current_user)):
     catalog = payload.catalog if payload and payload.catalog else get_model_catalog_service().load()
     rendered = get_model_catalog_service().apply(catalog)
     _invalidate_runtime_caches()
@@ -334,7 +335,7 @@ async def complete_tour(payload: TourCompletePayload | None = None):
 
 
 @router.post("/tour/reopen")
-async def reopen_tour():
+async def reopen_tour(user: dict = Depends(get_current_user)):
     return {
         "message": "Run the terminal setup guide from the project root to re-open the guided setup.",
         "command": "python scripts/start_tour.py",

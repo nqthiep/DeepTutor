@@ -6,10 +6,11 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
 
 from deeptutor.services.session import get_sqlite_session_store
+from deeptutor.services.auth.dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,7 @@ def _format_quiz_results_message(answers: list[QuizResultItem]) -> str:
 
 @router.get("")
 async def list_sessions(
+    user: dict = Depends(get_current_user),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ):
@@ -75,7 +77,7 @@ async def list_sessions(
 
 
 @router.get("/{session_id}")
-async def get_session(session_id: str):
+async def get_session(session_id: str, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     session = await store.get_session_with_messages(session_id)
     if session is None:
@@ -84,7 +86,7 @@ async def get_session(session_id: str):
 
 
 @router.patch("/{session_id}")
-async def rename_session(session_id: str, payload: SessionRenameRequest):
+async def rename_session(session_id: str, payload: SessionRenameRequest, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     updated = await store.update_session_title(session_id, payload.title)
     if not updated:
@@ -94,7 +96,7 @@ async def rename_session(session_id: str, payload: SessionRenameRequest):
 
 
 @router.delete("/{session_id}")
-async def delete_session(session_id: str):
+async def delete_session(session_id: str, user: dict = Depends(get_current_user)):
     store = get_sqlite_session_store()
     deleted = await store.delete_session(session_id)
     if not deleted:
@@ -103,7 +105,7 @@ async def delete_session(session_id: str):
 
 
 @router.post("/{session_id}/quiz-results")
-async def record_quiz_results(session_id: str, payload: QuizResultsRequest):
+async def record_quiz_results(session_id: str, payload: QuizResultsRequest, user: dict = Depends(get_current_user)):
     if not payload.answers:
         raise HTTPException(status_code=400, detail="Quiz results are required")
     store = get_sqlite_session_store()
