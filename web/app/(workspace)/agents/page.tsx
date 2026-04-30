@@ -114,23 +114,22 @@ export default function AgentsPage() {
   }, [loadBots, loadSouls]);
 
   return (
-    <div className="h-full overflow-y-auto [scrollbar-gutter:stable]">
-      <div className="mx-auto max-w-[960px] px-6 py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-[24px] font-semibold tracking-tight text-[var(--foreground)]">
-            {t("TutorBot Agents")}
-          </h1>
-          {toast ? (
-            <p className="mt-1 text-[13px] text-[var(--primary)] animate-fade-in">
-              {toast}
-            </p>
-          ) : (
-            <p className="mt-1 text-[13px] text-[var(--muted-foreground)]">
+    <div className="flex h-full flex-col">
+      <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-6 py-3">
+        <div className="flex items-center gap-3">
+          <Bot size={18} className="text-[var(--muted-foreground)]" />
+          <div>
+            <div className="text-sm font-semibold text-[var(--foreground)]">
+              {t("TutorBot Agents")}
+            </div>
+            <div className="text-xs text-[var(--muted-foreground)]">
               {t("Manage your in-process TutorBot instances")}
-            </p>
-          )}
+            </div>
+          </div>
         </div>
+      </header>
+      <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+        <div className="mx-auto max-w-[960px] px-6 py-6">
 
         {/* Tabs */}
         <div className="mb-6 flex items-center gap-1 border-b border-[var(--border)]/50 pb-3">
@@ -192,6 +191,7 @@ export default function AgentsPage() {
           <SoulsTab souls={souls} onReload={loadSouls} onToast={setToast} canManage={canManage} />
         )}
       </div>
+    </div>
     </div>
   );
 }

@@ -230,21 +230,30 @@ export default function BotChatPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-3">
-        <button
-          onClick={() => router.push("/agents")}
-          className="rounded-lg p-1.5 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <Bot className="h-4 w-4 text-[var(--muted-foreground)]" />
-        <span className="text-[14px] font-medium text-[var(--foreground)]">
-          {bot?.name ?? botId}
-        </span>
-        {bot?.running && (
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-        )}
-        <div className="ml-auto flex items-center gap-2">
+      <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-6 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/agents")}
+            className="rounded-lg p-1.5 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <Bot size={18} className="text-[var(--muted-foreground)]" />
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-[var(--foreground)]">
+                {bot?.name ?? botId}
+              </span>
+              {bot?.running && (
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              )}
+            </div>
+            <div className="text-xs text-[var(--muted-foreground)]">
+              AI tutor agent
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSaveModal(true)}
             disabled={!notebookSavePayload}
@@ -261,7 +270,7 @@ export default function BotChatPage() {
             {t("Download Markdown")}
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Messages */}
       <div

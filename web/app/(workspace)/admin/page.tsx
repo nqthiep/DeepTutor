@@ -27,6 +27,7 @@ import {
   UserPlus,
   Check,
   X,
+  Shield,
 } from "lucide-react";
 
 const ROLES = ["learner", "manager", "administrator"] as const;
@@ -152,11 +153,19 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
-          User Management
-        </h1>
+    <div className="flex h-full flex-col">
+      <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-6 py-3">
+        <div className="flex items-center gap-3">
+          <Shield size={18} className="text-[var(--muted-foreground)]" />
+          <div>
+            <div className="text-sm font-semibold text-[var(--foreground)]">
+              User Management
+            </div>
+            <div className="text-xs text-[var(--muted-foreground)]">
+              Manage users and permissions
+            </div>
+          </div>
+        </div>
         <Button
           variant="primary"
           size="sm"
@@ -165,7 +174,9 @@ export default function AdminPage() {
         >
           Add User
         </Button>
-      </div>
+      </header>
+
+      <div className="mx-auto max-w-5xl p-6">
 
       {/* Search + Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -415,6 +426,7 @@ export default function AdminPage() {
           me={me}
         />
       )}
+      </div>
     </div>
   );
 }

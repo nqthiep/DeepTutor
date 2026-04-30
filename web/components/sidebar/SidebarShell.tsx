@@ -26,6 +26,7 @@ import SessionList from "@/components/SessionList";
 import { TutorBotRecent } from "@/components/sidebar/TutorBotRecent";
 import { VersionBadge } from "@/components/sidebar/VersionBadge";
 import ProfilePopover from "@/components/sidebar/ProfilePopover";
+import CollapsedProfilePopover from "@/components/sidebar/CollapsedProfilePopover";
 import type { SessionSummary } from "@/lib/session-api";
 
 interface NavEntry {
@@ -126,21 +127,21 @@ export function SidebarShell({
           </button>
         </div>
 
-        {/* New chat — visually distinct circular button */}
+        {/* New chat */}
         <button
           onClick={handleNewChat}
           title={t("New Chat") as string}
-          className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)]/50 bg-[var(--background)]/40 text-[var(--foreground)] shadow-sm transition-all duration-150 hover:border-[var(--border)] hover:bg-[var(--background)]/80"
+          className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg text-[var(--muted-foreground)] transition-all duration-150 hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
           aria-label={t("New Chat")}
         >
           <Plus size={16} strokeWidth={2.2} />
         </button>
 
         {/* Subtle divider */}
-        <div className="my-1.5 h-px w-7 bg-[var(--border)]/40" />
+        <div className="my-1.5 h-px w-8 bg-[var(--border)]/30" />
 
         {/* Primary nav */}
-        <nav className="flex w-full flex-col items-center gap-1 px-1.5">
+        <nav className="flex w-full flex-col items-center gap-1.5 px-1.5">
           {PRIMARY_NAV.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
@@ -148,14 +149,14 @@ export function SidebarShell({
                 key={item.href}
                 href={item.href}
                 title={t(item.label) as string}
-                className={`relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150 ${
+                className={`relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150 ${
                   active
-                    ? "bg-[var(--background)]/80 text-[var(--foreground)] shadow-sm"
+                    ? "bg-[var(--background)]/70 font-medium text-[var(--foreground)] shadow-sm"
                     : "text-[var(--muted-foreground)] hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
                 }`}
               >
                 {active && (
-                  <span className="absolute -left-1.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[var(--foreground)]/80" />
+                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--foreground)]/80" />
                 )}
                 <item.icon size={18} strokeWidth={active ? 2 : 1.6} />
               </Link>
@@ -168,14 +169,14 @@ export function SidebarShell({
                 key={item.href}
                 href={item.href}
                 title={t(item.label) as string}
-                className={`relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150 ${
+                className={`relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150 ${
                   active
-                    ? "bg-[var(--background)]/80 text-[var(--foreground)] shadow-sm"
+                    ? "bg-[var(--background)]/70 font-medium text-[var(--foreground)] shadow-sm"
                     : "text-[var(--muted-foreground)] hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
                 }`}
               >
                 {active && (
-                  <span className="absolute -left-1.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[var(--foreground)]/80" />
+                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--foreground)]/80" />
                 )}
                 <item.icon size={18} strokeWidth={active ? 2 : 1.6} />
               </Link>
@@ -186,8 +187,15 @@ export function SidebarShell({
         <div className="flex-1" />
 
         {/* Secondary nav + footer */}
-        <div className="flex w-full flex-col items-center gap-1 px-1.5">
-          <div className="my-1 h-px w-7 bg-[var(--border)]/40" />
+        <div className="flex w-full flex-col items-center gap-1.5 px-1.5">
+          {/* Avatar — collapsed */}
+          <CollapsedProfilePopover
+            userInitial={userInitial}
+            userName={userName}
+            userEmail={userEmail}
+          />
+
+          <div className="my-1 h-px w-8 bg-[var(--border)]/30" />
           {SECONDARY_NAV.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
@@ -195,14 +203,14 @@ export function SidebarShell({
                 key={item.href}
                 href={item.href}
                 title={t(item.label) as string}
-                className={`relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150 ${
+                className={`relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150 ${
                   active
-                    ? "bg-[var(--background)]/80 text-[var(--foreground)] shadow-sm"
+                    ? "bg-[var(--background)]/70 font-medium text-[var(--foreground)] shadow-sm"
                     : "text-[var(--muted-foreground)] hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
                 }`}
               >
                 {active && (
-                  <span className="absolute -left-1.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[var(--foreground)]/80" />
+                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--foreground)]/80" />
                 )}
                 <item.icon size={18} strokeWidth={active ? 2 : 1.6} />
               </Link>
@@ -215,25 +223,11 @@ export function SidebarShell({
             rel="noreferrer noopener"
             title="GitHub"
             aria-label="GitHub"
-            className="mt-1 flex h-9 w-9 items-center justify-center rounded-xl text-[var(--muted-foreground)]/70 transition-colors hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
+            className="mt-1 flex h-9 w-9 items-center justify-center rounded-lg text-[var(--muted-foreground)]/70 transition-colors hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
           >
             <Github size={15} strokeWidth={1.6} />
           </a>
           <VersionBadge collapsed />
-
-          {/* Avatar — collapsed */}
-          <div className="group/avatar relative mt-1">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)]/15 text-[var(--primary)] text-sm font-semibold">
-              {userInitial}
-            </div>
-            {/* Tooltip on hover */}
-            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover/avatar:block z-50">
-              <div className="bg-[var(--popover)] border border-[var(--border)] rounded-lg px-3 py-2 shadow-lg whitespace-nowrap">
-                <p className="text-[13px] font-medium text-[var(--foreground)]">{userName}</p>
-                <p className="text-[11px] text-[var(--muted-foreground)]">{userEmail}</p>
-              </div>
-            </div>
-          </div>
         </div>
       </aside>
     );

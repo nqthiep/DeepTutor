@@ -570,7 +570,7 @@ export default memo(function ChatComposer({
             </div>
           )}
 
-          <div className="border-t border-[var(--border)]/35 px-3 py-2">
+          <div className="border-t border-[var(--border)]/35 px-2.5 py-1.5">
             <div className="flex items-center gap-2">
               <button
                 ref={capBtnRef}
@@ -951,7 +951,7 @@ export default memo(function ChatComposer({
                   <button
                     type="button"
                     onClick={onCancelStreaming}
-                    className="group relative inline-flex h-[29px] w-[29px] shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-[0_4px_12px_rgba(195,90,44,0.18)] transition-[background-color,box-shadow] hover:bg-[var(--primary)]/90 hover:shadow-[0_6px_16px_rgba(195,90,44,0.28)]"
+                    className="group relative inline-flex h-[29px] w-[29px] shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-[0_4px_12px_rgba(0,109,75,0.2)] transition-[background-color,box-shadow] hover:bg-[var(--primary)]/90 hover:shadow-[0_6px_16px_rgba(0,109,75,0.3)]"
                     aria-label={t("Stop generating")}
                     title={t("Stop generating")}
                   >
@@ -971,7 +971,7 @@ export default memo(function ChatComposer({
                     type="button"
                     onClick={handleManualSend}
                     disabled={!canSend}
-                    className="rounded-full bg-[var(--primary)] p-[7px] text-white shadow-[0_4px_12px_rgba(195,90,44,0.15)] transition-[transform,opacity,box-shadow] hover:shadow-[0_6px_16px_rgba(195,90,44,0.22)] disabled:opacity-25 disabled:shadow-none"
+                    className="rounded-full bg-[var(--primary)] p-[7px] text-white shadow-[0_4px_12px_rgba(0,109,75,0.2)] transition-[transform,opacity,box-shadow] hover:shadow-[0_6px_16px_rgba(0,109,75,0.3)] disabled:opacity-25 disabled:shadow-none"
                     aria-label={t("Send")}
                   >
                     <ArrowUp size={15} strokeWidth={2.5} />

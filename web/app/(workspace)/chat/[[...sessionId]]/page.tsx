@@ -1105,34 +1105,44 @@ export default function ChatPage() {
       data-preview-open={previewSource ? "true" : "false"}
       className="chat-preview-shell flex h-full flex-col overflow-hidden bg-[var(--background)]"
     >
-      <div className="mx-auto flex w-full max-w-[960px] items-center justify-between px-6 pt-3 pb-0">
-        <span className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-          {t(activeCap.label)}
-        </span>
+      <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-6 py-3">
+        <div className="flex items-center gap-3">
+          <MessageSquare size={18} className="text-[var(--muted-foreground)]" />
+          <div>
+            <div className="text-sm font-semibold text-[var(--foreground)]">
+              {t(activeCap.label)}
+            </div>
+            <div className="text-xs text-[var(--muted-foreground)]">
+              Chat with AI assistant
+            </div>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowSaveModal(true)}
-            disabled={!chatSavePayload}
-            className="rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[var(--border)]/50 disabled:hover:text-[var(--muted-foreground)]"
-          >
-            {t("Save to Notebook")}
-          </button>
-          <button
-            onClick={handleDownloadMarkdown}
-            disabled={!state.messages.length}
-            title={t("Download chat history as Markdown")}
-            className="rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[var(--border)]/50 disabled:hover:text-[var(--muted-foreground)]"
-          >
-            {t("Download Markdown")}
-          </button>
+          <div className="flex items-center gap-px rounded-lg bg-[var(--muted)] p-0.5">
+            <button
+              onClick={() => setShowSaveModal(true)}
+              disabled={!chatSavePayload}
+              className="rounded-md px-2.5 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--card)] hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[var(--muted-foreground)]"
+            >
+              {t("Save to Notebook")}
+            </button>
+            <button
+              onClick={handleDownloadMarkdown}
+              disabled={!state.messages.length}
+              title={t("Download chat history as Markdown")}
+              className="rounded-md px-2.5 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--card)] hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[var(--muted-foreground)]"
+            >
+              {t("Download Markdown")}
+            </button>
+          </div>
           <button
             onClick={handleNewChat}
-            className="rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
+            className="rounded-lg bg-[var(--primary)] px-3 py-1.5 text-[12px] font-medium text-[var(--primary-foreground)] shadow-sm transition-colors hover:bg-[var(--primary)]/90"
           >
             {t("New chat")}
           </button>
         </div>
-      </div>
+      </header>
       <div className="mx-auto flex w-full max-w-[960px] flex-1 min-h-0 flex-col overflow-hidden px-6">
         {!hasMessages ? (
           <div className="flex flex-1 min-h-0 flex-col items-center justify-center animate-fade-in">

@@ -186,7 +186,7 @@ export const ComposerInput = memo(
     }, [setInputBoth, onInputChange, onSelectQuestionBankPicker]);
 
     return (
-      <div className="px-4 pt-3.5 pb-2">
+      <div className="px-4 pt-2.5 pb-1.5">
         <AtMentionPopup
           open={showAtPopup}
           onSelectNotebook={handleSelectNotebook}

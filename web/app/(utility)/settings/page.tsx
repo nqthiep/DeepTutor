@@ -646,7 +646,7 @@ function SettingsPageContent() {
     await apiFetch("/api/v1/settings/ui", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ theme, language }),
+      body: JSON.stringify({ theme: nextTheme, language: nextLanguage }),
     });
   };
 

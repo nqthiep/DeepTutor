@@ -124,102 +124,180 @@
     transform: translateY(-1px);
   }
 
-  /* ── Nexus: Emerald-Dominant Premium Education Theme ───────────────────
-     Green is the hero — bold, purposeful, and professional.  A whisper-green
-     canvas gives the interface unmistakable character while white cards and
-     dark text preserve crisp readability.  Emerald commands attention only
-     where it matters: primary actions, active states, and key accents.       */
+  /* ── Nexus: Emerald-Dominant Education Theme ───────────────────────────
+     Dark emerald sidebar anchors the experience.  Soft emerald-green
+     accents (#4ADE80) signal active and focused states without the neon
+     glare.  A neutral gray-white canvas (#F8F9FA) replaces pure white
+     to reduce eye strain during long study sessions.                         */
 
   .theme-nexus {
     color-scheme: light;
-    --background: #f4f7f4;
-    --foreground: #18181b;
+    --background: #f8f9fa;
+    --foreground: #1a202c;
     --card: #ffffff;
-    --card-foreground: #18181b;
+    --card-foreground: #1a202c;
     --popover: #ffffff;
-    --popover-foreground: #18181b;
-    --primary: #059669;
+    --popover-foreground: #1a202c;
+    --primary: #006d4b;
     --primary-foreground: #ffffff;
-    --secondary: #ecfdf5;
-    --secondary-foreground: #065f46;
-    --muted: #edf2ee;
-    --muted-foreground: #71717a;
+    --secondary: #065f46;
+    --secondary-foreground: #d1fae5;
+    --muted: #eaf2ec;
+    --muted-foreground: #718096;
     --accent: #d1fae5;
-    --accent-foreground: #065f46;
-    --destructive: #dc2626;
+    --accent-foreground: #006d4b;
+    --destructive: #a83836;
     --destructive-foreground: #ffffff;
-    --border: #d4d4d8;
-    --input: #e4e4e7;
-    --ring: #059669;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #4ade80;
   }
 
   .theme-nexus.dark {
     color-scheme: dark;
-    --background: #0d1f14;
-    --foreground: #e8ede8;
-    --card: #142c1c;
-    --card-foreground: #e8ede8;
-    --popover: #142c1c;
-    --popover-foreground: #e8ede8;
-    --primary: #34d399;
-    --primary-foreground: #0d1f14;
-    --secondary: #142c1c;
-    --secondary-foreground: #e8ede8;
-    --muted: #142c1c;
-    --muted-foreground: #8f9f8f;
-    --accent: #1a3d28;
+    --background: #0f172a;
+    --foreground: #e8edf5;
+    --card: #1e293b;
+    --card-foreground: #e8edf5;
+    --popover: #1e293b;
+    --popover-foreground: #e8edf5;
+    --primary: #7ff3be;
+    --primary-foreground: #0f172a;
+    --secondary: #15291e;
+    --secondary-foreground: #e8edf5;
+    --muted: #15291e;
+    --muted-foreground: #7aae8e;
+    --accent: #064e3b;
     --accent-foreground: #d1fae5;
     --destructive: #f87171;
     --destructive-foreground: #ffffff;
     --border: #1e3a28;
     --input: #1e3a28;
-    --ring: #34d399;
+    --ring: #4ade80;
   }
 
+  /* ── Nexus: Dark Emerald Sidebar ──────────────────────────────────────
+     All text on the dark backdrop is re-scoped to light colours so
+     Tailwind classes like text-[var(--foreground)] resolve correctly
+     without fragile attribute-selector hacks.  Hover/active states use
+     a semi-transparent white overlay for a clean glassy feel.              */
+  .theme-nexus aside.h-screen {
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.08);
+    --sidebar-active-bg: rgba(255, 255, 255, 0.12);
+  }
+  .theme-nexus aside.h-screen,
+  .theme-nexus aside.h-screen * {
+    --foreground: #f1f5f9;
+    --muted-foreground: #f1f5f9;
+    --primary: rgba(255, 255, 255, 0.5);
+  }
+  .theme-nexus aside.h-screen a[href]:hover,
+  .theme-nexus aside.h-screen button:hover,
+  .theme-nexus aside.h-screen [role="button"]:hover {
+    background-color: var(--sidebar-hover-bg) !important;
+  }
+  .theme-nexus aside.h-screen a[href]:where([class*="font-medium"]),
+  .theme-nexus aside.h-screen button:where([class*="font-medium"]),
+  .theme-nexus aside.h-screen [role="button"]:where([class*="font-medium"]) {
+    background-color: var(--sidebar-active-bg) !important;
+  }
+  .theme-nexus aside.h-screen nav a[href]:where([class*="font-medium"])
+    > [class*="rounded-full"] {
+    background-color: #ffffff !important;
+  }
+
+  /* ── Nexus: Table header (dark emerald tr needs light text) ──────────── */
+  .theme-nexus thead th {
+    color: #d1fae5;
+  }
+
+  /* ── Nexus: Chat bubbles ──────────────────────────────────────────────
+     User bubble: light gray so dark text pops and the UI doesn't feel
+     heavy.  Assistant response: off-white container with subtle border
+     to visually separate AI content from the page canvas.                  */
+  .theme-nexus .flex.justify-end [class*="rounded-2xl"] {
+    background: #e2e8f0 !important;
+    color: #1a202c !important;
+    box-shadow: none !important;
+  }
+  .theme-nexus [class*="leading-\\[1\\.75\\]"] {
+    background: #f1f4f8;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 8px 0;
+  }
+
+  /* ── Nexus: Top toolbar — group buttons into a subtle toolbar ───────── */
+  .theme-nexus [class*="mx-auto"][class*="max-w-\\[960px\\]"]
+    [class*="border-"][class*="px-3"][class*="py-1\\.5"] {
+    border-color: var(--border);
+    background: var(--card);
+  }
+  .theme-nexus [class*="mx-auto"][class*="max-w-\\[960px\\]"]
+    [class*="border-"][class*="px-3"][class*="py-1\\.5"]:first-of-type {
+    border-radius: 8px 0 0 8px;
+  }
+  .theme-nexus [class*="mx-auto"][class*="max-w-\\[960px\\]"]
+    [class*="border-"][class*="px-3"][class*="py-1\\.5"]:last-of-type {
+    border-radius: 0 8px 8px 0;
+  }
+  .theme-nexus [class*="mx-auto"][class*="max-w-\\[960px\\]"]
+    [class*="border-"][class*="px-3"][class*="py-1\\.5"]:not(:first-of-type):not(:last-of-type) {
+    border-radius: 0;
+    border-left: none;
+  }
+
+  /* ── Nexus: Token / cost footer ───────────────────────────────────────
+     Dim the technical metrics so they don't distract from the content.      */
+  .theme-nexus [class*="text-\\[10px\\]"][class*="text-\\[var\\(--muted-foreground\\)\\]"],
+  .theme-nexus [class*="text-\\[10px\\]"] [class*="text-\\[var\\(--muted-foreground\\)\\]"] {
+    opacity: 0.4;
+  }
+
+  /* ── Nexus: Surface card ────────────────────────────────────────────── */
   .theme-nexus .surface-card {
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(5, 150, 105, 0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 105, 75, 0.06);
     border-color: var(--border);
     transition: box-shadow 0.2s ease;
   }
-
   .theme-nexus.dark .surface-card {
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.3);
     border-color: var(--border);
   }
 
+  /* ── Nexus: Primary button ──────────────────────────────────────────── */
   .theme-nexus .btn-primary {
-    background: #059669;
+    background: #006d4b;
     color: #ffffff;
     border: none;
-    box-shadow: 0 1px 2px rgba(5, 150, 105, 0.2);
+    box-shadow: 0 1px 2px rgba(0, 105, 75, 0.2);
     transition: all 0.15s ease;
   }
-
   .theme-nexus .btn-primary:hover {
-    background: #047857;
-    box-shadow: 0 3px 10px rgba(5, 150, 105, 0.3);
+    background: #005a3d;
+    box-shadow: 0 3px 10px rgba(0, 105, 75, 0.3);
     transform: translateY(-1px);
   }
-
   .theme-nexus .btn-primary:active {
-    background: #065f46;
+    background: #00452e;
     transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(5, 150, 105, 0.2);
+    box-shadow: 0 1px 2px rgba(0, 105, 75, 0.2);
   }
-
   .theme-nexus.dark .btn-primary {
-    background: #34d399;
-    color: #0d1f14;
-    box-shadow: 0 1px 2px rgba(52, 211, 153, 0.2);
+    background: #7ff3be;
+    color: #0f172a;
   }
-
   .theme-nexus.dark .btn-primary:hover {
-    background: #6ee7b7;
-    box-shadow: 0 3px 10px rgba(52, 211, 153, 0.3);
+    background: #a7f3d0;
+  }
+  .theme-nexus.dark .btn-primary:active {
+    background: #d1fae5;
   }
 
-  .theme-nexus.dark .btn-primary:active {
-    background: #a7f3d0;
+  /* ── Nexus: Focus ring (lime green) ─────────────────────────────────── */
+  .theme-nexus *:focus-visible {
+    outline: 2px solid #4ade80;
+    outline-offset: 2px;
   }
 
   * {
