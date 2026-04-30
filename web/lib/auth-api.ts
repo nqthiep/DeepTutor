@@ -165,8 +165,105 @@ export async function changePassword(
 
 // ─── Admin endpoints ──────────────────────────────────────────────────
 
-export async function listUsers(accessToken: string): Promise<User[]> {
+interface ListUsersParams {
+  search?: string;
+  role?: string;
+  is_active?: boolean;
+}
+
+export async function listUsers(
+  accessToken: string,
+  params?: ListUsersParams,
+): Promise<User[]> {
+  const query = new URLSearchParams();
+  if (params?.search) query.set("search", params.search);
+  if (params?.role) query.set("role", params.role);
+  if (params?.is_active !== undefined) query.set("is_active", String(params.is_active));
+  const qs = query.toString();
+  const url = apiUrl(`/api/v1/auth/users${qs ? `?${qs}` : ""}`);
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? "Request failed");
+  }
+  return res.json();
+}
+
+export async function getUser(
+  userId: string,
+  accessToken: string,
+): Promise<User> {
+  const res = await fetch(apiUrl(`/api/v1/auth/users/${userId}`), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? "Request failed");
+  }
+  return res.json();
+}
+
+export async function createUser(
+  data: { email: string; password: string; display_name?: string; role: string },
+  accessToken: string,
+): Promise<User> {
   const res = await fetch(apiUrl("/api/v1/auth/users"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? "Request failed");
+  }
+  return res.json();
+}
+
+export async function updateUser(
+  userId: string,
+  data: { display_name?: string; email?: string; role?: string },
+  accessToken: string,
+): Promise<User> {
+  const res = await fetch(apiUrl(`/api/v1/auth/users/${userId}`), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? "Request failed");
+  }
+  return res.json();
+}
+
+export async function deleteUser(
+  userId: string,
+  accessToken: string,
+): Promise<void> {
+  const res = await fetch(apiUrl(`/api/v1/auth/users/${userId}`), {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? "Request failed");
+  }
+}
+
+export async function toggleUserActive(
+  userId: string,
+  accessToken: string,
+): Promise<User> {
+  const res = await fetch(apiUrl(`/api/v1/auth/users/${userId}/active`), {
+    method: "PUT",
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) {

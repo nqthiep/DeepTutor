@@ -117,11 +117,41 @@ class AuthStore:
             {"id": user_id, "email": email, "display_name": display_name, "role": role, "is_active": 1, "created_at": now, "updated_at": now}
         )
 
-    def list_all_users(self) -> list[dict]:
+    def create_user_by_admin(
+        self,
+        email: str,
+        password_hash: str,
+        display_name: str = "",
+        role: str = "learner",
+    ) -> dict:
+        return self.create_user(
+            email=email,
+            password_hash=password_hash,
+            display_name=display_name,
+            role=role,
+        )
+
+    def list_all_users(
+        self,
+        search: str | None = None,
+        role: str | None = None,
+        is_active: bool | None = None,
+    ) -> list[dict]:
+        query = "SELECT * FROM users WHERE 1=1"
+        params: list = []
+        if search:
+            query += " AND (email LIKE ? OR display_name LIKE ?)"
+            like = f"%{search}%"
+            params.extend([like, like])
+        if role:
+            query += " AND role = ?"
+            params.append(role)
+        if is_active is not None:
+            query += " AND is_active = ?"
+            params.append(1 if is_active else 0)
+        query += " ORDER BY created_at ASC"
         with self._connect() as conn:
-            rows = conn.execute(
-                "SELECT * FROM users ORDER BY created_at ASC"
-            ).fetchall()
+            rows = conn.execute(query, params).fetchall()
         return [self._serialize_user(dict(row)) for row in rows]
 
     def update_user_role(self, user_id: str, role: str) -> dict | None:
@@ -132,6 +162,50 @@ class AuthStore:
             )
             conn.commit()
         return self.get_user_by_id(user_id)
+
+    def toggle_user_active(self, user_id: str) -> dict | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT is_active FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+            if row is None:
+                return None
+            new_active = 0 if row["is_active"] else 1
+            conn.execute(
+                "UPDATE users SET is_active = ?, updated_at = ? WHERE id = ?",
+                (new_active, time.time(), user_id),
+            )
+            conn.commit()
+        return self.get_user_by_id_including_inactive(user_id)
+
+    def update_user_admin(self, user_id: str, **kwargs) -> dict | None:
+        allowed = {"display_name", "email", "role"}
+        fields = {k: v for k, v in kwargs.items() if k in allowed and v is not None}
+        if not fields:
+            return self.get_user_by_id_including_inactive(user_id)
+        fields["updated_at"] = time.time()
+        set_clause = ", ".join(f"{k} = ?" for k in fields)
+        values = list(fields.values()) + [user_id]
+        with self._connect() as conn:
+            try:
+                conn.execute(
+                    f"UPDATE users SET {set_clause} WHERE id = ?",
+                    tuple(values),
+                )
+                conn.commit()
+            except sqlite3.IntegrityError:
+                raise ValueError("Email already in use")
+        return self.get_user_by_id_including_inactive(user_id)
+
+    def get_user_by_id_including_inactive(self, user_id: str) -> dict | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return self._serialize_user(dict(row))
 
     def get_user_by_email(self, email: str) -> dict | None:
         with self._connect() as conn:
@@ -220,6 +294,30 @@ class AuthStore:
                 (token_hash,),
             )
             conn.commit()
+
+    def deactivate_user(self, user_id: str) -> dict | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT is_active FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+            if row is None:
+                return None
+            if row["is_active"] == 0:
+                return self.get_user_by_id_including_inactive(user_id)
+            conn.execute(
+                "UPDATE users SET is_active = 0, updated_at = ? WHERE id = ?",
+                (time.time(), user_id),
+            )
+            conn.commit()
+        return self.get_user_by_id_including_inactive(user_id)
+
+    def hard_delete_user(self, user_id: str) -> bool:
+        with self._connect() as conn:
+            conn.execute("DELETE FROM refresh_tokens WHERE user_id = ?", (user_id,))
+            conn.execute("DELETE FROM password_reset_tokens WHERE user_id = ?", (user_id,))
+            cur = conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            conn.commit()
+        return cur.rowcount > 0
 
     def delete_user_refresh_tokens(self, user_id: str) -> None:
         with self._connect() as conn:

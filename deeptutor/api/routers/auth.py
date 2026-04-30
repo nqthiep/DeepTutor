@@ -10,7 +10,9 @@ from deeptutor.services.auth.dependencies import get_current_user, require_role
 from deeptutor.services.auth.email import send_password_reset_email
 from deeptutor.services.auth.password import hash_password, verify_password
 from deeptutor.services.auth.schemas import (
+    AdminCreateUserRequest,
     AdminUpdateRoleRequest,
+    AdminUpdateUserRequest,
     ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
@@ -215,11 +217,90 @@ async def change_own_password(
 
 @router.get("/users")
 async def list_users(
+    search: str | None = None,
+    role: str | None = None,
+    is_active: bool | None = None,
     user: dict = Depends(require_role("administrator")),
     store: AuthStore = Depends(get_auth_store),
 ):
-    users = store.list_all_users()
+    users = store.list_all_users(search=search, role=role, is_active=is_active)
     return [UserOut(**u).model_dump() for u in users]
+
+
+@router.get("/users/{user_id}")
+async def get_user(
+    user_id: str,
+    user: dict = Depends(require_role("administrator")),
+    store: AuthStore = Depends(get_auth_store),
+):
+    u = store.get_user_by_id_including_inactive(user_id)
+    if u is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return UserOut(**u).model_dump()
+
+
+@router.post("/users")
+async def create_user(
+    body: AdminCreateUserRequest,
+    user: dict = Depends(require_role("administrator")),
+    store: AuthStore = Depends(get_auth_store),
+):
+    try:
+        u = store.create_user_by_admin(
+            email=body.email,
+            password_hash=hash_password(body.password),
+            display_name=body.display_name,
+            role=body.role,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    return UserOut(**u).model_dump()
+
+
+@router.put("/users/{user_id}")
+async def update_user(
+    user_id: str,
+    body: AdminUpdateUserRequest,
+    user: dict = Depends(require_role("administrator")),
+    store: AuthStore = Depends(get_auth_store),
+):
+    try:
+        updated = store.update_user_admin(
+            user_id,
+            display_name=body.display_name,
+            email=body.email,
+            role=body.role,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    if updated is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return UserOut(**updated).model_dump()
+
+
+@router.put("/users/{user_id}/active")
+async def toggle_user_active(
+    user_id: str,
+    user: dict = Depends(require_role("administrator")),
+    store: AuthStore = Depends(get_auth_store),
+):
+    updated = store.toggle_user_active(user_id)
+    if updated is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return UserOut(**updated).model_dump()
+
+
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    user: dict = Depends(require_role("administrator")),
+    store: AuthStore = Depends(get_auth_store),
+):
+    u = store.get_user_by_id_including_inactive(user_id)
+    if u is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    store.deactivate_user(user_id)
+    return {"message": "User deactivated"}
 
 
 @router.put("/users/{user_id}/role")
