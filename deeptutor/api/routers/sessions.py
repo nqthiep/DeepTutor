@@ -70,9 +70,10 @@ async def list_sessions(
     user: dict = Depends(get_current_user),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
+    subject_id: str | None = Query(default=None),
 ):
     store = get_sqlite_session_store()
-    sessions = await store.list_sessions(limit=limit, offset=offset)
+    sessions = await store.list_sessions(limit=limit, offset=offset, subject_id=subject_id)
     return {"sessions": sessions}
 
 

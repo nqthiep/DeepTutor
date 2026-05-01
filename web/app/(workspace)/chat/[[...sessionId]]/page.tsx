@@ -535,6 +535,20 @@ export default function ChatPage() {
     setActiveSessionId(state.sessionId || sessionIdParam || null);
   }, [state.sessionId, sessionIdParam, setActiveSessionId]);
 
+  // Sync subject when session loads
+  const prevSubjSessionId = useRef<string | null>(null);
+  useEffect(() => {
+    const sid = state.sessionId || sessionIdParam;
+    if (!sid || sid === prevSubjSessionId.current) return;
+    prevSubjSessionId.current = sid;
+    import("@/lib/session-api").then(({ getSession }) => {
+      getSession(sid).then((detail) => {
+        const subjId = detail.preferences?.subject_id;
+        if (subjId) setActiveSubject(subjId);
+      }).catch(() => {});
+    });
+  }, [state.sessionId, sessionIdParam, setActiveSubject]);
+
   const refreshKnowledgeBases = useCallback(
     async (options?: { force?: boolean }) => {
       try {
@@ -1111,19 +1125,11 @@ export default function ChatPage() {
       data-preview-open={previewSource ? "true" : "false"}
       className="chat-preview-shell flex h-full flex-col overflow-hidden bg-[var(--background)]"
     >
-      <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-6 py-3">
-        <div className="flex items-center gap-2">
+      <header className="flex shrink-0 items-start justify-between border-b border-[var(--border)] px-6 py-3">
+        <div>
           <SubjectSwitcher />
-          <div className="flex items-center gap-3">
-            <MessageSquare size={18} className="text-[var(--muted-foreground)]" />
-            <div>
-              <div className="text-sm font-semibold text-[var(--foreground)]">
-                {t(activeCap.label)}
-              </div>
-              <div className="text-xs text-[var(--muted-foreground)]">
-                {t("Learn better with AI guidance")}
-              </div>
-            </div>
+          <div className="mt-0.5 text-[11px] text-[var(--muted-foreground)]">
+            {t("Learn better with AI guidance")}
           </div>
         </div>
         <div className="flex items-center gap-2">

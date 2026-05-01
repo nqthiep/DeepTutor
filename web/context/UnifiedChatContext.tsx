@@ -757,6 +757,10 @@ export function UnifiedChatProvider({
           turn_id: activeTurn.turn_id || activeTurn.id,
           after_seq: 0,
         });
+        const subjId = session.preferences?.subject_id;
+        if (subjId && typeof window !== "undefined") {
+          localStorage.setItem("deeptutor-subject", subjId);
+        }
       }
     },
     [hydrateMessages, sendThroughRunner],
@@ -903,6 +907,7 @@ export function UnifiedChatProvider({
           ? effectiveKnowledgeBases
           : [],
         session_id: session.sessionId,
+        subject_id: typeof window !== "undefined" ? localStorage.getItem("deeptutor-subject") || "" : "",
         attachments,
         language: effectiveLanguage,
         ...(notebookReferences?.length

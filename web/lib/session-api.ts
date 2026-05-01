@@ -42,6 +42,7 @@ export interface SessionSummary {
     tools?: string[];
     knowledge_bases?: string[];
     language?: string;
+    subject_id?: string;
   };
 }
 
@@ -79,6 +80,7 @@ export interface SessionDetail {
     tools?: string[];
     knowledge_bases?: string[];
     language?: string;
+    subject_id?: string;
   };
   messages: SessionMessage[];
   active_turns?: ActiveTurnSummary[];
@@ -106,12 +108,14 @@ async function expectJson<T>(response: Response): Promise<T> {
 export async function listSessions(
   limit = 50,
   offset = 0,
-  options?: { force?: boolean },
+  options?: { force?: boolean; subject_id?: string },
 ): Promise<SessionSummary[]> {
   return withClientCache<SessionSummary[]>(
-    `sessions:${limit}:${offset}`,
+    `sessions:${limit}:${offset}:${options?.subject_id ?? ""}`,
     async () => {
-      const response = await apiFetch(`/api/v1/sessions?limit=${limit}&offset=${offset}`, {
+      const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+      if (options?.subject_id) params.set("subject_id", options.subject_id);
+      const response = await apiFetch(`/api/v1/sessions?${params}`, {
         cache: "no-store",
       });
       const data = await expectJson<{ sessions: SessionSummary[] }>(response);

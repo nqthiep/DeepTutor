@@ -694,10 +694,17 @@ class SQLiteSessionStore:
     async def get_messages_for_context(self, session_id: str) -> list[dict[str, Any]]:
         return await self._run(self._get_messages_for_context_sync, session_id)
 
-    def _list_sessions_sync(self, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
+    def _list_sessions_sync(
+        self, limit: int = 50, offset: int = 0, subject_id: str | None = None
+    ) -> list[dict[str, Any]]:
         with self._connect() as conn:
+            where = ""
+            params: tuple = (limit, offset)
+            if subject_id:
+                where = "WHERE json_extract(s.preferences_json, '$.subject_id') = ?"
+                params = (subject_id, limit, offset)
             rows = conn.execute(
-                """
+                f"""
                 SELECT
                     s.id,
                     s.title,
@@ -764,8 +771,10 @@ class SQLiteSessionStore:
             sessions.append(payload)
         return sessions
 
-    async def list_sessions(self, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
-        return await self._run(self._list_sessions_sync, limit, offset)
+    async def list_sessions(
+        self, limit: int = 50, offset: int = 0, subject_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        return await self._run(self._list_sessions_sync, limit, offset, subject_id)
 
     def _update_summary_sync(self, session_id: str, summary: str, up_to_msg_id: int) -> bool:
         with self._connect() as conn:

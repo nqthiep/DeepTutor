@@ -311,6 +311,7 @@ class TurnRuntimeManager:
                 "tools": list(payload.get("tools") or []),
                 "knowledge_bases": list(payload.get("knowledge_bases") or []),
                 "language": str(payload.get("language") or "en"),
+                "subject_id": str(payload.get("subject_id") or ""),
             },
         )
         turn = await self.store.create_turn(session["id"], capability=capability)

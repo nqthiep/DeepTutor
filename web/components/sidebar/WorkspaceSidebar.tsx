@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { SidebarShell } from "@/components/sidebar/SidebarShell";
 import { useUnifiedChat } from "@/context/UnifiedChatContext";
+import { useSubject } from "@/context/SubjectContext";
 import {
   deleteSession,
   listSessions,
@@ -21,6 +22,7 @@ export default function WorkspaceSidebar() {
     sessionStatuses,
     sidebarRefreshToken,
   } = useUnifiedChat();
+  const { activeSubject } = useSubject();
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const hasLoadedSessionsRef = useRef(false);
@@ -30,18 +32,20 @@ export default function WorkspaceSidebar() {
       setLoadingSessions(true);
     }
     try {
-      setSessions(await listSessions(50, 0, { force: true }));
+      const subjectId = activeSubject?.id;
+      setSessions(await listSessions(50, 0, { force: true, subject_id: subjectId }));
       hasLoadedSessionsRef.current = true;
     } catch (error) {
       console.error("Failed to load sessions", error);
     } finally {
       setLoadingSessions(false);
     }
-  }, []);
+  }, [activeSubject?.id]);
 
   useEffect(() => {
+    hasLoadedSessionsRef.current = false;
     void refreshSessions();
-  }, [refreshSessions, sidebarRefreshToken]);
+  }, [refreshSessions, sidebarRefreshToken, activeSubject?.id]);
 
   const orderedSessions = sessions
     .map((session, index) => {
