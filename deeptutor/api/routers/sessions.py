@@ -73,7 +73,8 @@ async def list_sessions(
     subject_id: str | None = Query(default=None),
 ):
     store = get_sqlite_session_store()
-    sessions = await store.list_sessions(limit=limit, offset=offset, subject_id=subject_id)
+    user_id = str(user.get("sub", ""))
+    sessions = await store.list_sessions(limit=limit, offset=offset, subject_id=subject_id, user_id=user_id)
     return {"sessions": sessions}
 
 

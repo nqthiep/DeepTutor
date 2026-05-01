@@ -200,18 +200,19 @@ class SQLiteSessionStore:
         return conn
 
     def _create_session_sync(
-        self, title: str | None = None, session_id: str | None = None
+        self, title: str | None = None, session_id: str | None = None, user_id: str | None = None
     ) -> dict[str, Any]:
         now = time.time()
         resolved_id = session_id or f"unified_{int(now * 1000)}_{uuid.uuid4().hex[:8]}"
         resolved_title = (title or "New conversation").strip() or "New conversation"
+        resolved_user_id = (user_id or "").strip()
         with self._connect() as conn:
             conn.execute(
                 """
-                INSERT INTO sessions (id, title, created_at, updated_at, compressed_summary, summary_up_to_msg_id)
-                VALUES (?, ?, ?, ?, '', 0)
+                INSERT INTO sessions (id, title, created_at, updated_at, compressed_summary, summary_up_to_msg_id, user_id)
+                VALUES (?, ?, ?, ?, '', 0, ?)
                 """,
-                (resolved_id, resolved_title[:100], now, now),
+                (resolved_id, resolved_title[:100], now, now, resolved_user_id),
             )
             conn.commit()
         return {
@@ -287,12 +288,12 @@ class SQLiteSessionStore:
     async def get_session(self, session_id: str) -> dict[str, Any] | None:
         return await self._run(self._get_session_sync, session_id)
 
-    async def ensure_session(self, session_id: str | None = None) -> dict[str, Any]:
+    async def ensure_session(self, session_id: str | None = None, user_id: str | None = None) -> dict[str, Any]:
         if session_id:
             session = await self.get_session(session_id)
             if session is not None:
                 return session
-        return await self.create_session()
+        return await self.create_session(user_id=user_id)
 
     @staticmethod
     def _serialize_turn(row: sqlite3.Row) -> dict[str, Any]:
@@ -695,14 +696,20 @@ class SQLiteSessionStore:
         return await self._run(self._get_messages_for_context_sync, session_id)
 
     def _list_sessions_sync(
-        self, limit: int = 50, offset: int = 0, subject_id: str | None = None
+        self, limit: int = 50, offset: int = 0, subject_id: str | None = None, user_id: str | None = None
     ) -> list[dict[str, Any]]:
         with self._connect() as conn:
             where = ""
             params: tuple = (limit, offset)
-            if subject_id:
+            if subject_id and user_id:
+                where = "WHERE json_extract(s.preferences_json, '$.subject_id') = ? AND s.user_id = ?"
+                params = (subject_id, user_id, limit, offset)
+            elif subject_id:
                 where = "WHERE json_extract(s.preferences_json, '$.subject_id') = ?"
                 params = (subject_id, limit, offset)
+            elif user_id:
+                where = "WHERE s.user_id = ?"
+                params = (user_id, limit, offset)
             rows = conn.execute(
                 f"""
                 SELECT
@@ -772,9 +779,9 @@ class SQLiteSessionStore:
         return sessions
 
     async def list_sessions(
-        self, limit: int = 50, offset: int = 0, subject_id: str | None = None
+        self, limit: int = 50, offset: int = 0, subject_id: str | None = None, user_id: str | None = None
     ) -> list[dict[str, Any]]:
-        return await self._run(self._list_sessions_sync, limit, offset, subject_id)
+        return await self._run(self._list_sessions_sync, limit, offset, subject_id, user_id)
 
     def _update_summary_sync(self, session_id: str, summary: str, up_to_msg_id: int) -> bool:
         with self._connect() as conn:

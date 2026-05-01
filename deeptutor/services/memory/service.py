@@ -55,15 +55,20 @@ class MemoryService:
         self,
         path_service: PathService | None = None,
         store: SQLiteSessionStore | None = None,
+        user_id: str = "",
     ) -> None:
         self._path_service = path_service or get_path_service()
         self._store = store or get_sqlite_session_store()
+        self._user_id = (user_id or "").strip()
         self._refresh_lock = asyncio.Lock()
         self._migrate_legacy()
 
     @property
     def _memory_dir(self) -> Path:
-        return self._path_service.get_memory_dir()
+        base = self._path_service.get_memory_dir()
+        if self._user_id:
+            return base / self._user_id
+        return base
 
     def _path(self, which: MemoryFile) -> Path:
         return self._memory_dir / _FILENAMES[which]
@@ -423,11 +428,13 @@ def _clean_memory_content(content: str) -> str:
 _memory_service: MemoryService | None = None
 
 
-def get_memory_service() -> MemoryService:
+def get_memory_service(user_id: str = "") -> MemoryService:
     global _memory_service
-    if _memory_service is None:
-        _memory_service = MemoryService()
-    return _memory_service
+    if not user_id:
+        if _memory_service is None:
+            _memory_service = MemoryService()
+        return _memory_service
+    return MemoryService(user_id=user_id)
 
 
 __all__ = [

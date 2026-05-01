@@ -73,7 +73,25 @@ class AuthStore:
             }
             if "user_id" not in session_columns:
                 conn.execute(
-                    "ALTER TABLE sessions ADD COLUMN user_id TEXT REFERENCES users(id)"
+                    "ALTER TABLE sessions ADD COLUMN user_id TEXT DEFAULT ''"
+                )
+
+            # Migrate: add user_id to notebook_entries if missing
+            ne_columns = {
+                row[1] for row in conn.execute("PRAGMA table_info(notebook_entries)").fetchall()
+            }
+            if "user_id" not in ne_columns:
+                conn.execute(
+                    "ALTER TABLE notebook_entries ADD COLUMN user_id TEXT DEFAULT ''"
+                )
+
+            # Migrate: add user_id to notebook_categories if missing
+            nc_columns = {
+                row[1] for row in conn.execute("PRAGMA table_info(notebook_categories)").fetchall()
+            }
+            if "user_id" not in nc_columns:
+                conn.execute(
+                    "ALTER TABLE notebook_categories ADD COLUMN user_id TEXT DEFAULT ''"
                 )
             conn.commit()
 

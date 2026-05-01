@@ -908,6 +908,7 @@ export function UnifiedChatProvider({
           : [],
         session_id: session.sessionId,
         subject_id: typeof window !== "undefined" ? localStorage.getItem("deeptutor-subject") || "" : "",
+        user_id: typeof window !== "undefined" ? localStorage.getItem("deeptutor-user-id") || "" : "",
         attachments,
         language: effectiveLanguage,
         ...(notebookReferences?.length

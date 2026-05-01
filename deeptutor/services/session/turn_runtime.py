@@ -303,7 +303,7 @@ class TurnRuntimeManager:
             "capability": capability,
             "config": {**validated_public_config, **runtime_only_config},
         }
-        session = await self.store.ensure_session(payload.get("session_id"))
+        session = await self.store.ensure_session(payload.get("session_id"), user_id=str(payload.get("user_id") or ""))
         await self.store.update_session_preferences(
             session["id"],
             {
@@ -654,7 +654,8 @@ class TurnRuntimeManager:
                 on_event=_emit_context_event,
             )
             subject_id = str(payload.get("subject_id") or "")
-            memory_service = get_memory_service()
+            user_id = str(payload.get("user_id") or "")
+            memory_service = get_memory_service(user_id=user_id)
             memory_context = memory_service.build_memory_context(subject_id=subject_id)
 
             skill_service = get_skill_service()

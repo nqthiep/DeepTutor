@@ -25,6 +25,8 @@ import {
   refreshTokens as apiRefreshTokens,
 } from "@/lib/auth-api";
 
+const USER_ID_KEY = "deeptutor-user-id";
+
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
@@ -56,6 +58,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getAccessToken = useCallback(() => {
     return getStoredAccessToken();
   }, []);
+
+  // Sync user_id to localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (user?.id) {
+      localStorage.setItem(USER_ID_KEY, user.id);
+    }
+  }, [user?.id]);
 
   // Restore session on mount
   useEffect(() => {
@@ -112,7 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Proceed even if server call fails
       }
     }
-    clearTokens();
+      clearTokens();
+    localStorage.removeItem("deeptutor-user-id");
     setUser(null);
     router.push("/login");
   }, [router]);

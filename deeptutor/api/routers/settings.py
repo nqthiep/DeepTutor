@@ -25,20 +25,23 @@ from deeptutor.services.path_service import get_path_service
 
 router = APIRouter()
 
-_path_service = get_path_service()
-SETTINGS_FILE = _path_service.get_settings_file("interface")
+from deeptutor.services.settings.interface_settings import get_ui_settings as _get_ui_settings
+from deeptutor.services.settings.interface_settings import save_ui_settings as _save_ui_settings
 
-DEFAULT_SIDEBAR_NAV_ORDER = {
-    "start": ["/", "/history", "/knowledge", "/notebook"],
-    "learnResearch": ["/question", "/solver", "/research", "/co_writer"],
-}
+_pls = get_path_service()
+SETTINGS_FILE = _pls.get_settings_file("interface")
 
-DEFAULT_UI_SETTINGS = {
-    "theme": "snow",
-    "language": "en",
-    "sidebar_description": "✨ Data Intelligence Lab @ HKU",
-    "sidebar_nav_order": DEFAULT_SIDEBAR_NAV_ORDER,
-}
+
+def _uid(user: dict) -> str:
+    return str(user.get("sub", ""))
+
+
+def load_ui_settings(user_id: str = "") -> dict[str, Any]:
+    return _get_ui_settings(user_id=user_id)
+
+
+def save_ui_settings(settings: dict[str, Any], user_id: str = "") -> None:
+    _save_ui_settings(settings, user_id=user_id)
 
 
 class SidebarNavOrder(BaseModel):
@@ -146,7 +149,7 @@ def _provider_choices() -> dict[str, list[dict[str, str]]]:
 @router.get("")
 async def get_settings(user: dict = Depends(get_current_user)):
     return {
-        "ui": load_ui_settings(),
+        "ui": load_ui_settings(user_id=_uid(user)),
         "catalog": get_model_catalog_service().load(),
         "providers": _provider_choices(),
     }
@@ -178,25 +181,28 @@ async def apply_catalog(payload: CatalogPayload | None = None, user: dict = Depe
 
 @router.put("/theme")
 async def update_theme(update: ThemeUpdate, user: dict = Depends(get_current_user)):
-    current_ui = load_ui_settings()
+    uid = _uid(user)
+    current_ui = load_ui_settings(user_id=uid)
     current_ui["theme"] = update.theme
-    save_ui_settings(current_ui)
+    save_ui_settings(current_ui, user_id=uid)
     return {"theme": update.theme}
 
 
 @router.put("/language")
 async def update_language(update: LanguageUpdate, user: dict = Depends(get_current_user)):
-    current_ui = load_ui_settings()
+    uid = _uid(user)
+    current_ui = load_ui_settings(user_id=uid)
     current_ui["language"] = update.language
-    save_ui_settings(current_ui)
+    save_ui_settings(current_ui, user_id=uid)
     return {"language": update.language}
 
 
 @router.put("/ui")
 async def update_ui_settings(update: UISettings, user: dict = Depends(get_current_user)):
-    current_ui = load_ui_settings()
+    uid = _uid(user)
+    current_ui = load_ui_settings(user_id=uid)
     current_ui.update(update.model_dump(exclude_none=True))
-    save_ui_settings(current_ui)
+    save_ui_settings(current_ui, user_id=uid)
     return current_ui
 
 
@@ -281,7 +287,7 @@ async def cancel_service_test(service: str, run_id: str, user: dict = Depends(re
     return {"message": "Cancelled"}
 
 
-TOUR_CACHE = _path_service.get_settings_dir() / ".tour_cache.json"
+TOUR_CACHE = _pls.get_settings_dir() / ".tour_cache.json"
 
 
 @router.get("/tour/status")

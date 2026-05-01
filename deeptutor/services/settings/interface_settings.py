@@ -14,11 +14,50 @@ from deeptutor.services.path_service import get_path_service
 
 _path_service = get_path_service()
 INTERFACE_SETTINGS_FILE = _path_service.get_settings_file("interface")
+# Legacy alias for backward compatibility
+LEGACY_INTERFACE_SETTINGS_FILE = INTERFACE_SETTINGS_FILE
 
 DEFAULT_UI_SETTINGS: dict[str, Any] = {
-    "theme": "light",
+    "theme": "snow",
     "language": "en",
 }
+
+
+def _get_user_interface_file(user_id: str) -> Path:
+    """Return the per-user interface settings file path."""
+    return _path_service.get_settings_dir() / f"interface_{user_id}.json" if user_id else INTERFACE_SETTINGS_FILE
+
+
+def get_ui_settings(user_id: str = "") -> dict[str, Any]:
+    """Read UI settings from per-user interface file with defaults."""
+    if user_id:
+        user_file = _get_user_interface_file(user_id)
+        if user_file.exists():
+            try:
+                with open(user_file, encoding="utf-8") as f:
+                    saved = json.load(f) or {}
+                merged = {**DEFAULT_UI_SETTINGS, **saved}
+                return merged
+            except Exception:
+                pass
+    # Fallback to legacy global file
+    if INTERFACE_SETTINGS_FILE.exists():
+        try:
+            with open(INTERFACE_SETTINGS_FILE, encoding="utf-8") as f:
+                saved = json.load(f) or {}
+            merged = {**DEFAULT_UI_SETTINGS, **saved}
+            return merged
+        except Exception:
+            pass
+    return DEFAULT_UI_SETTINGS.copy()
+
+
+def save_ui_settings(settings: dict[str, object], user_id: str = "") -> None:
+    """Save UI settings to per-user interface file."""
+    path = _get_user_interface_file(user_id) if user_id else INTERFACE_SETTINGS_FILE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(dict(settings), f, ensure_ascii=False, indent=2)
 
 
 def _normalize_language(language: Any, default: str = "en") -> str:

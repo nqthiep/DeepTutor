@@ -39,16 +39,21 @@ class MemoryClearRequest(BaseModel):
     file: MemoryFile | None = None
 
 
+def _get_svc(user: dict) -> object:
+    user_id = str(user.get("sub", ""))
+    return get_memory_service(user_id=user_id)
+
+
 @router.get("")
 async def get_memory(user: dict = Depends(get_current_user)):
-    return _snap_dict(get_memory_service().read_snapshot())
+    return _snap_dict(_get_svc(user).read_snapshot())
 
 
 @router.put("")
 async def update_memory(payload: FileUpdateRequest, user: dict = Depends(get_current_user)):
     if payload.file not in _VALID_FILES:
         raise HTTPException(status_code=400, detail=f"Invalid file: {payload.file}")
-    snap = get_memory_service().write_file(payload.file, payload.content)
+    snap = _get_svc(user).write_file(payload.file, payload.content)
     return {**_snap_dict(snap), "saved": True}
 
 
@@ -61,17 +66,17 @@ async def refresh_memory(payload: MemoryRefreshRequest, user: dict = Depends(get
         if session is None:
             raise HTTPException(status_code=404, detail="Session not found")
 
-    result = await get_memory_service().refresh_from_session(
+    result = await _get_svc(user).refresh_from_session(
         session_id or None,
         language=payload.language,
     )
-    snap = get_memory_service().read_snapshot()
+    snap = _get_svc(user).read_snapshot()
     return {**_snap_dict(snap), "changed": result.changed}
 
 
 @router.post("/clear")
 async def clear_memory(payload: MemoryClearRequest | None = None, user: dict = Depends(get_current_user)):
-    svc = get_memory_service()
+    svc = _get_svc(user)
     target = payload.file if payload else None
     if target and target not in _VALID_FILES:
         raise HTTPException(status_code=400, detail=f"Invalid file: {target}")
