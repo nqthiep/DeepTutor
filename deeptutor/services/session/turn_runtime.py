@@ -653,8 +653,9 @@ class TurnRuntimeManager:
                 language=payload.get("language", "en"),
                 on_event=_emit_context_event,
             )
+            subject_id = str(payload.get("subject_id") or "")
             memory_service = get_memory_service()
-            memory_context = memory_service.build_memory_context()
+            memory_context = memory_service.build_memory_context(subject_id=subject_id)
 
             skill_service = get_skill_service()
             requested_skills = list(payload.get("skills") or [])
@@ -664,6 +665,40 @@ class TurnRuntimeManager:
                 resolved_skills = [
                     s for s in requested_skills if isinstance(s, str) and s != "auto"
                 ]
+
+            # M4: Auto-add skills matching subject's skill_tags
+            if subject_id:
+                try:
+                    from deeptutor.services.subject import get_subject_service
+                    for s in get_subject_service().list_all():
+                        if s["id"] == subject_id:
+                            tags = s.get("skill_tags") or []
+                            if tags:
+                                tag_matched = skill_service.find_by_tags(tags)
+                                for skill_name in tag_matched:
+                                    if skill_name not in resolved_skills:
+                                        resolved_skills.append(skill_name)
+                            break
+                except Exception:
+                    pass
+            skills_context = skill_service.load_for_context(resolved_skills)
+
+            # ── Subject context ──────────────────────────────────────
+            subject_context = ""
+            if subject_id:
+                try:
+                    from deeptutor.services.subject import get_subject_service
+                    for s in get_subject_service().list_all():
+                        if s["id"] == subject_id:
+                            tags = s.get("skill_tags") or []
+                            if tags:
+                                tag_matched = skill_service.find_by_tags(tags)
+                                for skill_name in tag_matched:
+                                    if skill_name not in resolved_skills:
+                                        resolved_skills.append(skill_name)
+                            break
+                except Exception:
+                    pass
             skills_context = skill_service.load_for_context(resolved_skills)
 
             # ── Subject context ──────────────────────────────────────
@@ -859,6 +894,7 @@ class TurnRuntimeManager:
                         session_id=session_id,
                         capability=capability_name or "chat",
                         language=str(payload.get("language", "en") or "en"),
+                        subject_id=subject_id,
                     )
                 except Exception:
                     logger.debug("Failed to refresh lightweight memory", exc_info=True)

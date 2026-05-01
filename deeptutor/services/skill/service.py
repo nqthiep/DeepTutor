@@ -296,6 +296,18 @@ class SkillService:
 
     # ── auto-select (keyword based, no LLM) ─────────────────────────────
 
+    def find_by_tags(self, tags: list[str]) -> list[str]:
+        """Return skill names whose tags intersect with the given list."""
+        if not tags:
+            return []
+        tag_set = {t.lower().strip() for t in tags}
+        matched: list[str] = []
+        for info in self.list_skills():
+            skill_tags = {t.lower().strip() for t in (info.tags or [])}
+            if tag_set & skill_tags:
+                matched.append(info.name)
+        return matched
+
     def auto_select(self, user_message: str, limit: int = 1) -> list[str]:
         """Pick the most relevant skill(s) for the message via keyword scoring.
 

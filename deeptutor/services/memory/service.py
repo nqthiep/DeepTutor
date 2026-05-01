@@ -68,6 +68,12 @@ class MemoryService:
     def _path(self, which: MemoryFile) -> Path:
         return self._memory_dir / _FILENAMES[which]
 
+    def _subject_path(self, which: MemoryFile, subject_id: str) -> Path:
+        if not subject_id:
+            return self._path(which)
+        stem = _FILENAMES[which].replace(".md", "")
+        return self._memory_dir / f"{stem}_{subject_id}.md"
+
     def _migrate_legacy(self) -> None:
         """One-time migration from old memory.md to the two-file system."""
         legacy = self._memory_dir / "memory.md"
@@ -97,10 +103,13 @@ class MemoryService:
 
     # ── Read ──────────────────────────────────────────────────────────
 
-    def read_file(self, which: MemoryFile) -> str:
-        path = self._path(which)
+    def read_file(self, which: MemoryFile, subject_id: str = "") -> str:
+        path = self._subject_path(which, subject_id)
         if not path.exists():
-            return ""
+            if subject_id:
+                path = self._path(which)
+            if not path.exists():
+                return ""
         try:
             raw = path.read_text(encoding="utf-8").strip()
             cleaned = _clean_memory_content(raw)
@@ -122,35 +131,36 @@ class MemoryService:
     def read_profile(self) -> str:
         return self.read_file("profile")
 
-    def _file_updated_at(self, which: MemoryFile) -> str | None:
-        path = self._path(which)
+    def _file_updated_at(self, which: MemoryFile, subject_id: str = "") -> str | None:
+        path = self._subject_path(which, subject_id)
         if not path.exists():
-            return None
+            if subject_id:
+                path = self._path(which)
+            if not path.exists():
+                return None
         try:
             return datetime.fromtimestamp(path.stat().st_mtime).astimezone().isoformat()
         except Exception:
             return None
 
-    def read_snapshot(self) -> MemorySnapshot:
+    def read_snapshot(self, subject_id: str = "") -> MemorySnapshot:
         return MemorySnapshot(
-            summary=self.read_summary(),
-            profile=self.read_profile(),
-            summary_updated_at=self._file_updated_at("summary"),
-            profile_updated_at=self._file_updated_at("profile"),
+            summary=self.read_file("summary", subject_id=subject_id),
+            profile=self.read_file("profile", subject_id=subject_id),
+            summary_updated_at=self._file_updated_at("summary", subject_id=subject_id),
+            profile_updated_at=self._file_updated_at("profile", subject_id=subject_id),
         )
 
     # ── Write ─────────────────────────────────────────────────────────
 
-    def write_file(self, which: MemoryFile, content: str) -> MemorySnapshot:
-        normalized = _clean_memory_content(str(content or ""))
-        path = self._path(which)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if not normalized:
-            if path.exists():
-                path.unlink()
-        else:
-            path.write_text(normalized, encoding="utf-8")
-        return self.read_snapshot()
+    def write_file(self, which: MemoryFile, content: str, subject_id: str = "") -> MemorySnapshot:
+        path = self._subject_path(which, subject_id)
+        self._memory_dir.mkdir(parents=True, exist_ok=True)
+        if content.strip():
+            path.write_text(content.strip() + "\n", encoding="utf-8")
+        elif path.exists():
+            path.unlink()
+        return self.read_snapshot(subject_id=subject_id)
 
     def write_memory(self, content: str) -> MemorySnapshot:
         """Legacy compat: write to profile (primary editable file)."""
@@ -168,14 +178,14 @@ class MemoryService:
 
     # ── Context building (injected into LLM prompts) ─────────────────
 
-    def build_memory_context(self, max_chars: int = 4000) -> str:
+    def build_memory_context(self, max_chars: int = 4000, subject_id: str = "") -> str:
         parts: list[str] = []
 
-        profile = self.read_profile()
+        profile = self._read_subject_file("profile", subject_id)
         if profile:
             parts.append(f"### User Profile\n{profile}")
 
-        summary = self.read_summary()
+        summary = self._read_subject_file("summary", subject_id)
         if summary:
             parts.append(f"### Learning Context\n{summary}")
 
@@ -192,6 +202,17 @@ class MemoryService:
             f"{combined}"
         )
 
+    def _read_subject_file(self, which: MemoryFile, subject_id: str) -> str:
+        if subject_id:
+            subject_path = self._memory_dir / f"{_FILENAMES[which].replace('.md', '')}_{subject_id}.md"
+            if subject_path.exists():
+                try:
+                    raw = subject_path.read_text(encoding="utf-8").strip()
+                    return _clean_memory_content(raw) if raw else ""
+                except Exception:
+                    pass
+        return self.read_file(which)
+
     def get_preferences_text(self) -> str:
         profile = self.read_profile()
         return f"## User Profile\n{profile}" if profile else ""
@@ -207,6 +228,7 @@ class MemoryService:
         capability: str = "",
         language: str = "en",
         timestamp: str = "",
+        subject_id: str = "",
     ) -> MemoryUpdateResult:
         if not user_message.strip() or not assistant_message.strip():
             return MemoryUpdateResult(content="", changed=False, updated_at=None)
@@ -220,10 +242,10 @@ class MemoryService:
         )
 
         async with self._refresh_lock:
-            p_changed = await self._rewrite_one("profile", source, language)
-            s_changed = await self._rewrite_one("summary", source, language)
+            p_changed = await self._rewrite_one("profile", source, language, subject_id=subject_id)
+            s_changed = await self._rewrite_one("summary", source, language, subject_id=subject_id)
 
-            snap = self.read_snapshot()
+            snap = self.read_snapshot(subject_id=subject_id)
         return MemoryUpdateResult(
             content=snap.profile,
             changed=p_changed or s_changed,
@@ -236,6 +258,7 @@ class MemoryService:
         *,
         language: str = "en",
         max_messages: int = 10,
+        subject_id: str = "",
     ) -> MemoryUpdateResult:
         target = (session_id or "").strip()
         if not target:
@@ -273,10 +296,10 @@ class MemoryService:
         )
 
         async with self._refresh_lock:
-            p_changed = await self._rewrite_one("profile", source, language)
-            s_changed = await self._rewrite_one("summary", source, language)
+            p_changed = await self._rewrite_one("profile", source, language, subject_id=subject_id)
+            s_changed = await self._rewrite_one("summary", source, language, subject_id=subject_id)
 
-            snap = self.read_snapshot()
+            snap = self.read_snapshot(subject_id=subject_id)
         return MemoryUpdateResult(
             content=snap.profile,
             changed=p_changed or s_changed,
@@ -285,9 +308,9 @@ class MemoryService:
 
     # ── LLM rewrite for individual files ──────────────────────────────
 
-    async def _rewrite_one(self, which: MemoryFile, source: str, language: str) -> bool:
+    async def _rewrite_one(self, which: MemoryFile, source: str, language: str, subject_id: str = "") -> bool:
         """Rewrite a single memory file. Returns True if changed."""
-        current = self.read_file(which)
+        current = self.read_file(which, subject_id=subject_id)
         zh = str(language).lower().startswith("zh")
 
         if which == "profile":
@@ -311,7 +334,7 @@ class MemoryService:
         if raw == current:
             return False
 
-        self.write_file(which, raw)
+        self.write_file(which, raw, subject_id=subject_id)
         return True
 
     @staticmethod

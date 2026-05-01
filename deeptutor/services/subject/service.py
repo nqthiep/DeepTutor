@@ -47,12 +47,28 @@ DEFAULT_SYSTEM_PROMPTS: dict[str, str] = {
         "- Encourage practice through conversation and writing.",
 }
 
+DEFAULT_TOOLS: dict[str, list[str]] = {
+    "math": ["reason", "code_execution", "web_search"],
+    "physics": ["reason", "code_execution", "web_search"],
+    "chemistry": ["reason", "code_execution", "web_search"],
+    "literature": ["brainstorm", "web_search", "paper_search"],
+    "english": ["brainstorm", "web_search"],
+}
+
+DEFAULT_SKILL_TAGS: dict[str, list[str]] = {
+    "math": ["math", "stem"],
+    "physics": ["physics", "stem"],
+    "chemistry": ["chemistry", "stem"],
+    "literature": ["literature", "humanities"],
+    "english": ["english", "language"],
+}
+
 DEFAULT_SUBJECTS: list[dict[str, Any]] = [
-    {"id": "math",       "name": "Mathematics", "icon": "calculator", "color": "#3b82f6", "description": "Numbers, equations, and problem solving",                      "enabled": True, "sort_order": 1, "system_prompt": DEFAULT_SYSTEM_PROMPTS["math"]},
-    {"id": "physics",    "name": "Physics",      "icon": "atom",      "color": "#ef4444", "description": "Matter, energy, and the laws of nature",                         "enabled": True, "sort_order": 2, "system_prompt": DEFAULT_SYSTEM_PROMPTS["physics"]},
-    {"id": "chemistry",  "name": "Chemistry",    "icon": "flask",     "color": "#8b5cf6", "description": "Elements, reactions, and compounds",                             "enabled": True, "sort_order": 3, "system_prompt": DEFAULT_SYSTEM_PROMPTS["chemistry"]},
-    {"id": "literature", "name": "Literature",   "icon": "book-open", "color": "#ec4899", "description": "Poetry, prose, and critical analysis",                           "enabled": True, "sort_order": 4, "system_prompt": DEFAULT_SYSTEM_PROMPTS["literature"]},
-    {"id": "english",    "name": "English",      "icon": "globe",     "color": "#f59e0b", "description": "Language skills, grammar, and communication",                     "enabled": True, "sort_order": 5, "system_prompt": DEFAULT_SYSTEM_PROMPTS["english"]},
+    {"id": "math",       "name": "Mathematics", "icon": "calculator", "color": "#3b82f6", "description": "Numbers, equations, and problem solving",                      "enabled": True, "sort_order": 1, "system_prompt": DEFAULT_SYSTEM_PROMPTS["math"],       "default_tools": DEFAULT_TOOLS["math"],       "default_kb": "", "skill_tags": DEFAULT_SKILL_TAGS["math"]},
+    {"id": "physics",    "name": "Physics",      "icon": "atom",      "color": "#ef4444", "description": "Matter, energy, and the laws of nature",                         "enabled": True, "sort_order": 2, "system_prompt": DEFAULT_SYSTEM_PROMPTS["physics"],    "default_tools": DEFAULT_TOOLS["physics"],    "default_kb": "", "skill_tags": DEFAULT_SKILL_TAGS["physics"]},
+    {"id": "chemistry",  "name": "Chemistry",    "icon": "flask",     "color": "#8b5cf6", "description": "Elements, reactions, and compounds",                             "enabled": True, "sort_order": 3, "system_prompt": DEFAULT_SYSTEM_PROMPTS["chemistry"],  "default_tools": DEFAULT_TOOLS["chemistry"],  "default_kb": "", "skill_tags": DEFAULT_SKILL_TAGS["chemistry"]},
+    {"id": "literature", "name": "Literature",   "icon": "book-open", "color": "#ec4899", "description": "Poetry, prose, and critical analysis",                           "enabled": True, "sort_order": 4, "system_prompt": DEFAULT_SYSTEM_PROMPTS["literature"], "default_tools": DEFAULT_TOOLS["literature"], "default_kb": "", "skill_tags": DEFAULT_SKILL_TAGS["literature"]},
+    {"id": "english",    "name": "English",      "icon": "globe",     "color": "#f59e0b", "description": "Language skills, grammar, and communication",                     "enabled": True, "sort_order": 5, "system_prompt": DEFAULT_SYSTEM_PROMPTS["english"],    "default_tools": DEFAULT_TOOLS["english"],    "default_kb": "", "skill_tags": DEFAULT_SKILL_TAGS["english"]},
 ]
 
 

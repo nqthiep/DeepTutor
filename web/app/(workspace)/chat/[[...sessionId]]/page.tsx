@@ -549,6 +549,26 @@ export default function ChatPage() {
     });
   }, [state.sessionId, sessionIdParam, setActiveSubject]);
 
+  // M2: Auto-set tools when subject changes
+  const prevToolsSubjectId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!activeSubject || activeSubject.id === prevToolsSubjectId.current) return;
+    prevToolsSubjectId.current = activeSubject.id;
+    if (activeSubject.default_tools?.length) {
+      setTools(activeSubject.default_tools);
+    }
+  }, [activeSubject, setTools]);
+
+  // M3: Auto-select KB when subject has default_kb
+  const prevKbSubjectId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!activeSubject || activeSubject.id === prevKbSubjectId.current) return;
+    prevKbSubjectId.current = activeSubject.id;
+    if (activeSubject.default_kb) {
+      setKBs([activeSubject.default_kb]);
+    }
+  }, [activeSubject, setKBs]);
+
   const refreshKnowledgeBases = useCallback(
     async (options?: { force?: boolean }) => {
       try {

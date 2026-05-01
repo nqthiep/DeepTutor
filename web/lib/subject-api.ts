@@ -9,6 +9,9 @@ export interface Subject {
   enabled: boolean;
   sort_order: number;
   system_prompt?: string;
+  default_tools?: string[];
+  default_kb?: string;
+  skill_tags?: string[];
 }
 
 export async function listSubjects(): Promise<Subject[]> {
@@ -69,4 +72,13 @@ export const SUBJECT_ICONS = [
   "code",
   "dna",
   "scale",
+] as const;
+
+export const ALL_TOOLS = [
+  "brainstorm",
+  "rag",
+  "web_search",
+  "code_execution",
+  "reason",
+  "paper_search",
 ] as const;

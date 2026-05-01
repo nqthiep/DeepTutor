@@ -11,10 +11,11 @@ import {
   toggleSubject,
   restoreDefaultPrompt,
   SUBJECT_ICONS,
+  ALL_TOOLS,
   type Subject,
 } from "@/lib/subject-api";
 import { useTranslation } from "react-i18next";
-import { Loader2, Plus, Pencil, Trash2, Eye, EyeOff, RotateCcw } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Eye, EyeOff, RotateCcw, X } from "lucide-react";
 
 const DEFAULT_COLORS = [
   "#3b82f6", "#ef4444", "#8b5cf6", "#ec4899", "#f59e0b",
@@ -28,7 +29,7 @@ export default function SubjectAdminPanel() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Subject | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ id: "", name: "", icon: "book-open", color: "#3b82f6", description: "", system_prompt: "" });
+  const [form, setForm] = useState({ id: "", name: "", icon: "book-open", color: "#3b82f6", description: "", system_prompt: "", default_tools: [] as string[], default_kb: "", skill_tags: [] as string[] });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,7 +46,7 @@ export default function SubjectAdminPanel() {
     try {
       await createSubject({ ...form, enabled: true, sort_order: subjects.length + 1 });
       setShowForm(false);
-      setForm({ id: "", name: "", icon: "book-open", color: "#3b82f6", description: "", system_prompt: "" });
+      setForm({ id: "", name: "", icon: "book-open", color: "#3b82f6", description: "", system_prompt: "", default_tools: [], default_kb: "", skill_tags: [] });
       await load();
       await refreshSubjects();
     } catch (e) { alert(e instanceof Error ? e.message : "Failed"); }
@@ -151,6 +152,46 @@ export default function SubjectAdminPanel() {
                 value={form.system_prompt}
                 onChange={(e) => setForm((p) => ({ ...p, system_prompt: e.target.value }))}
                 placeholder="You are a mathematics tutor..."
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Default Tools</label>
+              <div className="flex flex-wrap gap-2">
+                {ALL_TOOLS.map((tool) => (
+                  <label key={tool} className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-2.5 py-1 text-[12px] text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] has-checked:border-[var(--primary)]/50 has-checked:bg-[var(--primary)]/[0.06] has-checked:text-[var(--foreground)]">
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={form.default_tools.includes(tool)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setForm((p) => ({ ...p, default_tools: [...p.default_tools, tool] }));
+                        } else {
+                          setForm((p) => ({ ...p, default_tools: p.default_tools.filter((t) => t !== tool) }));
+                        }
+                      }}
+                    />
+                    {tool.replace("_", " ")}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Default KB</label>
+              <input
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
+                value={form.default_kb}
+                onChange={(e) => setForm((p) => ({ ...p, default_kb: e.target.value }))}
+                placeholder="Knowledge Base name"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Skill Tags</label>
+              <input
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
+                value={form.skill_tags.join(", ")}
+                onChange={(e) => setForm((p) => ({ ...p, skill_tags: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) }))}
+                placeholder="math, stem"
               />
             </div>
           </div>
@@ -304,6 +345,56 @@ export default function SubjectAdminPanel() {
                   value={editing.system_prompt || ""}
                   onChange={(e) => setEditing((p) => p ? { ...p, system_prompt: e.target.value } : null)}
                 />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[12px] text-[var(--muted-foreground)]">Default Tools</label>
+                <div className="flex flex-wrap gap-2">
+                  {ALL_TOOLS.map((tool) => {
+                    const active = editing.default_tools?.includes(tool) ?? false;
+                    return (
+                      <button
+                        key={tool}
+                        type="button"
+                        onClick={() => setEditing((p) => p ? {
+                          ...p,
+                          default_tools: active
+                            ? (p.default_tools || []).filter((t) => t !== tool)
+                            : [...(p.default_tools || []), tool]
+                        } : null)}
+                        className={`rounded-lg border px-2.5 py-1 text-[12px] transition-colors ${
+                          active
+                            ? "border-[var(--primary)]/50 bg-[var(--primary)]/[0.06] text-[var(--foreground)]"
+                            : "border-[var(--border)]/50 text-[var(--muted-foreground)] hover:border-[var(--border)]"
+                        }`}
+                      >
+                        {tool.replace("_", " ")}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Default KB</label>
+                  <input
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
+                    value={editing.default_kb || ""}
+                    onChange={(e) => setEditing((p) => p ? { ...p, default_kb: e.target.value } : null)}
+                    placeholder="Knowledge Base name"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Skill Tags</label>
+                  <input
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
+                    value={(editing.skill_tags || []).join(", ")}
+                    onChange={(e) => setEditing((p) => p ? {
+                      ...p,
+                      skill_tags: e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
+                    } : null)}
+                    placeholder="math, stem"
+                  />
+                </div>
               </div>
             </div>
             <div className="mt-6 flex items-center gap-2">

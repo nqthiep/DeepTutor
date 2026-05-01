@@ -25,6 +25,9 @@ class SubjectPayload(BaseModel):
     enabled: bool = True
     sort_order: int = 0
     system_prompt: str = ""
+    default_tools: list[str] = Field(default_factory=list)
+    default_kb: str = ""
+    skill_tags: list[str] = Field(default_factory=list)
 
 
 class SubjectUpdatePayload(BaseModel):
@@ -35,6 +38,9 @@ class SubjectUpdatePayload(BaseModel):
     enabled: bool | None = None
     sort_order: int | None = None
     system_prompt: str | None = None
+    default_tools: list[str] | None = None
+    default_kb: str | None = None
+    skill_tags: list[str] | None = None
 
 
 # ── Learner endpoints ───────────────────────────────────────────────
