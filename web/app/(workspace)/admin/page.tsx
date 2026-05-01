@@ -248,14 +248,13 @@ export default function AdminPage() {
           ))}
         </select>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          icon={<UserPlus size={16} />}
+        <button
           onClick={() => setShowCreateModal(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
         >
+          <UserPlus className="h-3.5 w-3.5" />
           Add User
-        </Button>
+        </button>
       </div>
 
       {/* Loading */}
@@ -276,144 +275,107 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Table */}
+      {/* Users list */}
       {!loading && (
-        <div className="overflow-hidden rounded-lg border border-[var(--border)]">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="bg-[var(--secondary)] text-[var(--muted-foreground)]">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Role</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-8 text-center text-[var(--muted-foreground)]"
-                  >
-                    No users found
-                  </td>
-                </tr>
-              )}
-              {users.map((u) => (
-                <tr
-                  key={u.id}
-                  className="border-t border-[var(--border)]/50 transition-colors hover:bg-[var(--secondary)]/50"
-                >
-                  <td className="px-4 py-3 text-[var(--foreground)]">
-                    <span
-                      className={
-                        !u.is_active ? "opacity-50" : ""
-                      }
-                    >
-                      {u.display_name || "\u2014"}
-                    </span>
-                    {u.id === me?.id && (
-                      <span className="ml-2 rounded bg-[var(--primary)]/10 px-1.5 py-0.5 text-[11px] text-[var(--primary)]">
-                        You
+        <div className="space-y-2">
+          {users.length === 0 ? (
+            <div className="py-8 text-center text-[13px] text-[var(--muted-foreground)]">
+              No users found
+            </div>
+          ) : (
+            users.map((u) => (
+              <div
+                key={u.id}
+                className="flex items-center justify-between rounded-xl border border-[var(--border)] px-4 py-3 transition-colors hover:bg-[var(--muted)]/30"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--muted)] text-[13px] font-medium text-[var(--foreground)]">
+                    {(u.display_name || u.email || "U").charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-[14px] font-medium text-[var(--foreground)]">
+                        {u.display_name || "\u2014"}
                       </span>
-                    )}
-                  </td>
-                  <td
-                    className={
-                      "px-4 py-3 " +
-                      (u.is_active
-                        ? "text-[var(--muted-foreground)]"
-                        : "text-[var(--muted-foreground)]/50")
-                    }
-                  >
-                    {u.email}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={
-                        "rounded px-2 py-0.5 text-[11px] font-medium " +
-                        (u.role === "administrator"
+                      {u.id === me?.id && (
+                        <span className="rounded-md bg-[var(--primary)]/10 px-1.5 py-0.5 text-[10px] font-medium text-[var(--primary)]">
+                          You
+                        </span>
+                      )}
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        u.role === "administrator"
                           ? "bg-purple-500/10 text-purple-600"
                           : u.role === "manager"
                             ? "bg-blue-500/10 text-blue-600"
-                            : "bg-gray-500/10 text-gray-600")
-                      }
-                    >
-                      {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={
-                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium " +
-                        (u.is_active
+                            : "bg-gray-500/10 text-gray-600"
+                      }`}>
+                        {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+                      </span>
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        u.is_active
                           ? "bg-green-500/10 text-green-600"
-                          : "bg-red-500/10 text-red-600")
-                      }
-                    >
-                      <span
-                        className={
-                          "h-1.5 w-1.5 rounded-full " +
-                          (u.is_active ? "bg-green-500" : "bg-red-500")
-                        }
-                      />
-                      {u.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => openView(u)}
-                        className="rounded-md p-1.5 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
-                        title="View details"
-                      >
-                        <Eye size={15} />
-                      </button>
-                      <button
-                        onClick={() => openEdit(u)}
-                        className="rounded-md p-1.5 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
-                        title="Edit user"
-                      >
-                        <Pencil size={15} />
-                      </button>
-                      <button
-                        onClick={() => handleToggleActive(u)}
-                        disabled={togglingId === u.id}
-                        className={
-                          "rounded-md p-1.5 transition-colors " +
-                          (u.is_active
-                            ? "text-green-600 hover:bg-green-500/10"
-                            : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]")
-                        }
-                        title={u.is_active ? "Disable user" : "Enable user"}
-                      >
-                        {togglingId === u.id ? (
-                          <Loader2 size={15} className="animate-spin" />
-                        ) : u.is_active ? (
-                          <ToggleRight size={15} />
-                        ) : (
-                          <ToggleLeft size={15} />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(u)}
-                        disabled={deleteConfirmId === u.id}
-                        className="rounded-md p-1.5 text-[var(--muted-foreground)] transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:opacity-40"
-                        title="Delete user"
-                      >
-                        {deleteConfirmId === u.id ? (
-                          <Loader2 size={15} className="animate-spin" />
-                        ) : (
-                          <Trash2 size={15} />
-                        )}
-                      </button>
+                          : "bg-red-500/10 text-red-600"
+                      }`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${
+                          u.is_active ? "bg-green-500" : "bg-red-500"
+                        }`} />
+                        {u.is_active ? "Active" : "Inactive"}
+                      </span>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <div className="mt-0.5 truncate text-[13px] text-[var(--muted-foreground)]">
+                      {u.email}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    onClick={() => openView(u)}
+                    className="rounded-lg p-2 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+                    title="View details"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => openEdit(u)}
+                    className="rounded-lg p-2 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+                    title="Edit user"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleToggleActive(u)}
+                    disabled={togglingId === u.id}
+                    className={`rounded-lg p-2 transition-colors ${
+                      u.is_active
+                        ? "text-green-600 hover:bg-green-500/10"
+                        : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+                    } disabled:opacity-40`}
+                    title={u.is_active ? "Disable user" : "Enable user"}
+                  >
+                    {togglingId === u.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : u.is_active ? (
+                      <ToggleRight className="h-3.5 w-3.5" />
+                    ) : (
+                      <ToggleLeft className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(u)}
+                    disabled={deleteConfirmId === u.id}
+                    className="rounded-lg p-2 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-red-500 disabled:opacity-40"
+                    title="Delete user"
+                  >
+                    {deleteConfirmId === u.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
       </div>
