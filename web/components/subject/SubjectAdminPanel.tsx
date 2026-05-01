@@ -9,11 +9,12 @@ import {
   updateSubject,
   deleteSubject,
   toggleSubject,
+  restoreDefaultPrompt,
   SUBJECT_ICONS,
   type Subject,
 } from "@/lib/subject-api";
 import { useTranslation } from "react-i18next";
-import { Loader2, Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Eye, EyeOff, RotateCcw } from "lucide-react";
 
 const DEFAULT_COLORS = [
   "#3b82f6", "#ef4444", "#8b5cf6", "#ec4899", "#f59e0b",
@@ -27,7 +28,7 @@ export default function SubjectAdminPanel() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Subject | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ id: "", name: "", icon: "book-open", color: "#3b82f6", description: "" });
+  const [form, setForm] = useState({ id: "", name: "", icon: "book-open", color: "#3b82f6", description: "", system_prompt: "" });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,7 +45,7 @@ export default function SubjectAdminPanel() {
     try {
       await createSubject({ ...form, enabled: true, sort_order: subjects.length + 1 });
       setShowForm(false);
-      setForm({ id: "", name: "", icon: "book-open", color: "#3b82f6", description: "" });
+      setForm({ id: "", name: "", icon: "book-open", color: "#3b82f6", description: "", system_prompt: "" });
       await load();
       await refreshSubjects();
     } catch (e) { alert(e instanceof Error ? e.message : "Failed"); }
@@ -158,6 +159,16 @@ export default function SubjectAdminPanel() {
                 placeholder="Numbers, equations, and problem solving"
               />
             </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">System Prompt</label>
+              <textarea
+                rows={4}
+                className="w-full resize-y rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
+                value={form.system_prompt}
+                onChange={(e) => setForm((p) => ({ ...p, system_prompt: e.target.value }))}
+                placeholder="You are a mathematics tutor..."
+              />
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -236,44 +247,69 @@ export default function SubjectAdminPanel() {
       {/* ── Edit modal ── */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
-          <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-xl">
+          <div className="w-full max-w-2xl rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-xl">
             <h3 className="mb-4 text-[16px] font-semibold text-[var(--foreground)]">Edit Subject</h3>
             <div className="space-y-4">
-              <div>
-                <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Name</label>
-                <input
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
-                  value={editing.name}
-                  onChange={(e) => setEditing((p) => p ? { ...p, name: e.target.value } : null)}
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Name</label>
+                  <input
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
+                    value={editing.name}
+                    onChange={(e) => setEditing((p) => p ? { ...p, name: e.target.value } : null)}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Icon</label>
+                  <select
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
+                    value={editing.icon}
+                    onChange={(e) => setEditing((p) => p ? { ...p, icon: e.target.value } : null)}
+                  >
+                    {SUBJECT_ICONS.map((ic) => (
+                      <option key={ic} value={ic}>{subjectIcon(ic)} {ic}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Color</label>
+                  <input
+                    type="color"
+                    className="h-8 w-full cursor-pointer rounded border border-[var(--border)] bg-transparent"
+                    value={editing.color}
+                    onChange={(e) => setEditing((p) => p ? { ...p, color: e.target.value } : null)}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Description</label>
+                  <input
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
+                    value={editing.description}
+                    onChange={(e) => setEditing((p) => p ? { ...p, description: e.target.value } : null)}
+                  />
+                </div>
               </div>
               <div>
-                <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Icon</label>
-                <select
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
-                  value={editing.icon}
-                  onChange={(e) => setEditing((p) => p ? { ...p, icon: e.target.value } : null)}
-                >
-                  {SUBJECT_ICONS.map((ic) => (
-                    <option key={ic} value={ic}>{subjectIcon(ic)} {ic}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Color</label>
-                <input
-                  type="color"
-                  className="h-8 w-full cursor-pointer rounded border border-[var(--border)] bg-transparent"
-                  value={editing.color}
-                  onChange={(e) => setEditing((p) => p ? { ...p, color: e.target.value } : null)}
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-[var(--muted-foreground)]">Description</label>
-                <input
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none"
-                  value={editing.description}
-                  onChange={(e) => setEditing((p) => p ? { ...p, description: e.target.value } : null)}
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-[12px] text-[var(--muted-foreground)]">System Prompt</label>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const updated = await restoreDefaultPrompt(editing.id);
+                        setEditing(updated);
+                      } catch (e) { alert(e instanceof Error ? e.message : "Failed"); }
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Restore Default
+                  </button>
+                </div>
+                <textarea
+                  rows={6}
+                  className="w-full resize-y rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-[13px] text-[var(--foreground)] outline-none font-mono"
+                  value={editing.system_prompt || ""}
+                  onChange={(e) => setEditing((p) => p ? { ...p, system_prompt: e.target.value } : null)}
                 />
               </div>
             </div>

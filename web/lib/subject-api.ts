@@ -8,6 +8,7 @@ export interface Subject {
   description: string;
   enabled: boolean;
   sort_order: number;
+  system_prompt?: string;
 }
 
 export async function listSubjects(): Promise<Subject[]> {
@@ -42,6 +43,12 @@ export async function deleteSubject(id: string): Promise<void> {
 
 export async function toggleSubject(id: string): Promise<Subject> {
   const res = await apiFetch(`/api/v1/subjects/${id}/toggle`, { method: "PATCH" });
+  const data = (await res.json()) as { subject: Subject };
+  return data.subject;
+}
+
+export async function restoreDefaultPrompt(id: string): Promise<Subject> {
+  const res = await apiFetch(`/api/v1/subjects/${id}/restore-prompt`, { method: "POST" });
   const data = (await res.json()) as { subject: Subject };
   return data.subject;
 }

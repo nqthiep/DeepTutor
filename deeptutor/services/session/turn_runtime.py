@@ -666,6 +666,22 @@ class TurnRuntimeManager:
                 ]
             skills_context = skill_service.load_for_context(resolved_skills)
 
+            # ── Subject context ──────────────────────────────────────
+            subject_id = str(payload.get("subject_id") or "")
+            subject_context = ""
+            if subject_id:
+                try:
+                    from deeptutor.services.subject import get_subject_service
+                    subjects = get_subject_service().list_all()
+                    for s in subjects:
+                        if s["id"] == subject_id:
+                            sp = s.get("system_prompt", "")
+                            if sp:
+                                subject_context = f"## Subject Instructions\n\nYou are teaching {s.get('name', subject_id)}.\n\n{sp.strip()}"
+                            break
+                except Exception:
+                    pass
+
             if notebook_references:
                 referenced_records = notebook_manager.get_records_by_references(notebook_references)
                 if referenced_records:
@@ -800,6 +816,7 @@ class TurnRuntimeManager:
                 history_context=history_context,
                 memory_context=memory_context,
                 skills_context=skills_context,
+                subject_context=subject_context,
                 metadata={
                     "conversation_summary": history_result.conversation_summary,
                     "conversation_context_text": conversation_context_text,

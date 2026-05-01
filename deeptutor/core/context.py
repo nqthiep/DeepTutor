@@ -63,4 +63,5 @@ class UnifiedContext:
     history_context: str = ""
     memory_context: str = ""
     skills_context: str = ""
+    subject_context: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)

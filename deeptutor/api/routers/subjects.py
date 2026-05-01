@@ -24,6 +24,7 @@ class SubjectPayload(BaseModel):
     description: str = ""
     enabled: bool = True
     sort_order: int = 0
+    system_prompt: str = ""
 
 
 class SubjectUpdatePayload(BaseModel):
@@ -33,6 +34,7 @@ class SubjectUpdatePayload(BaseModel):
     description: str | None = None
     enabled: bool | None = None
     sort_order: int | None = None
+    system_prompt: str | None = None
 
 
 # ── Learner endpoints ───────────────────────────────────────────────
@@ -86,6 +88,16 @@ async def toggle_subject(subject_id: str, user: dict = Depends(require_role("adm
     svc = get_subject_service()
     try:
         subject = svc.toggle(subject_id)
+        return {"subject": subject}
+    except SubjectNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@router.post("/{subject_id}/restore-prompt")
+async def restore_default_prompt(subject_id: str, user: dict = Depends(require_role("administrator", "manager"))) -> dict:
+    svc = get_subject_service()
+    try:
+        subject = svc.restore_default_system_prompt(subject_id)
         return {"subject": subject}
     except SubjectNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
