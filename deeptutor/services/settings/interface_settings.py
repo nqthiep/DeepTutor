@@ -82,30 +82,7 @@ def _normalize_language(language: Any, default: str = "en") -> str:
     return "en"
 
 
-def get_ui_settings() -> dict[str, Any]:
-    """
-    Read UI settings from interface.json with defaults.
-
-    Returns:
-        dict containing at least: {"theme": "...", "language": "..."}
-    """
-    if INTERFACE_SETTINGS_FILE.exists():
-        try:
-            with open(INTERFACE_SETTINGS_FILE, encoding="utf-8") as f:
-                saved = json.load(f) or {}
-            merged = {**DEFAULT_UI_SETTINGS, **saved}
-            merged["language"] = _normalize_language(
-                merged.get("language"), DEFAULT_UI_SETTINGS["language"]
-            )
-            return merged
-        except Exception:
-            # On any parse error, fall back to defaults (safe)
-            return DEFAULT_UI_SETTINGS.copy()
-
-    return DEFAULT_UI_SETTINGS.copy()
-
-
-def get_ui_language(default: str = "en") -> str:
+def get_ui_language(default: str = "en", user_id: str = "") -> str:
     """
     Get current UI language.
 
@@ -114,5 +91,5 @@ def get_ui_language(default: str = "en") -> str:
     2) provided default
     3) 'en'
     """
-    settings = get_ui_settings()
+    settings = get_ui_settings(user_id=user_id)
     return _normalize_language(settings.get("language"), default)

@@ -700,16 +700,16 @@ class SQLiteSessionStore:
     ) -> list[dict[str, Any]]:
         with self._connect() as conn:
             where = ""
-            params: tuple = (limit, offset)
+            params: list = [limit, offset]
             if subject_id and user_id:
                 where = "WHERE json_extract(s.preferences_json, '$.subject_id') = ? AND s.user_id = ?"
-                params = (subject_id, user_id, limit, offset)
+                params = [subject_id, user_id, limit, offset]
             elif subject_id:
                 where = "WHERE json_extract(s.preferences_json, '$.subject_id') = ?"
-                params = (subject_id, limit, offset)
+                params = [subject_id, limit, offset]
             elif user_id:
                 where = "WHERE s.user_id = ?"
-                params = (user_id, limit, offset)
+                params = [user_id, limit, offset]
             rows = conn.execute(
                 f"""
                 SELECT
@@ -764,11 +764,12 @@ class SQLiteSessionStore:
                     ) AS last_message
                 FROM sessions s
                 LEFT JOIN messages m ON m.session_id = s.id
+                {where}
                 GROUP BY s.id
                 ORDER BY s.updated_at DESC
                 LIMIT ? OFFSET ?
                 """,
-                (limit, offset),
+                tuple(params),
             ).fetchall()
         sessions = []
         for row in rows:

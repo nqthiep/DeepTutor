@@ -27,13 +27,14 @@ router = APIRouter()
 
 from deeptutor.services.settings.interface_settings import get_ui_settings as _get_ui_settings
 from deeptutor.services.settings.interface_settings import save_ui_settings as _save_ui_settings
+from deeptutor.services.settings.interface_settings import DEFAULT_UI_SETTINGS
 
 _pls = get_path_service()
 SETTINGS_FILE = _pls.get_settings_file("interface")
 
 
 def _uid(user: dict) -> str:
-    return str(user.get("sub", ""))
+    return str(user.get("id", user.get("sub", "")))
 
 
 def load_ui_settings(user_id: str = "") -> dict[str, Any]:
@@ -82,22 +83,6 @@ def _invalidate_runtime_caches() -> None:
     reset_llm_client()
     reset_embedding_client()
 
-
-def load_ui_settings() -> dict[str, Any]:
-    if SETTINGS_FILE.exists():
-        try:
-            with open(SETTINGS_FILE, encoding="utf-8") as handle:
-                saved = json.load(handle)
-                return {**DEFAULT_UI_SETTINGS, **saved}
-        except Exception:
-            pass
-    return DEFAULT_UI_SETTINGS.copy()
-
-
-def save_ui_settings(settings: dict[str, Any]) -> None:
-    SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(SETTINGS_FILE, "w", encoding="utf-8") as handle:
-        json.dump(settings, handle, ensure_ascii=False, indent=2)
 
 
 def _provider_choices() -> dict[str, list[dict[str, str]]]:
@@ -208,8 +193,9 @@ async def update_ui_settings(update: UISettings, user: dict = Depends(get_curren
 
 @router.post("/reset")
 async def reset_settings(user: dict = Depends(get_current_user)):
-    save_ui_settings(DEFAULT_UI_SETTINGS)
-    return DEFAULT_UI_SETTINGS
+    uid = _uid(user)
+    save_ui_settings(DEFAULT_UI_SETTINGS.copy(), user_id=uid)
+    return DEFAULT_UI_SETTINGS.copy()
 
 
 @router.get("/themes")
@@ -226,7 +212,7 @@ async def get_themes(user: dict = Depends(get_current_user)):
 
 @router.get("/sidebar")
 async def get_sidebar_settings(user: dict = Depends(get_current_user)):
-    current_ui = load_ui_settings()
+    current_ui = load_ui_settings(user_id=_uid(user))
     return {
         "description": current_ui.get(
             "sidebar_description", DEFAULT_UI_SETTINGS["sidebar_description"]
@@ -237,17 +223,19 @@ async def get_sidebar_settings(user: dict = Depends(get_current_user)):
 
 @router.put("/sidebar/description")
 async def update_sidebar_description(update: SidebarDescriptionUpdate, user: dict = Depends(get_current_user)):
-    current_ui = load_ui_settings()
+    uid = _uid(user)
+    current_ui = load_ui_settings(user_id=uid)
     current_ui["sidebar_description"] = update.description
-    save_ui_settings(current_ui)
+    save_ui_settings(current_ui, user_id=uid)
     return {"description": update.description}
 
 
 @router.put("/sidebar/nav-order")
 async def update_sidebar_nav_order(update: SidebarNavOrderUpdate, user: dict = Depends(get_current_user)):
-    current_ui = load_ui_settings()
+    uid = _uid(user)
+    current_ui = load_ui_settings(user_id=uid)
     current_ui["sidebar_nav_order"] = update.nav_order.model_dump()
-    save_ui_settings(current_ui)
+    save_ui_settings(current_ui, user_id=uid)
     return {"nav_order": update.nav_order.model_dump()}
 
 

@@ -40,7 +40,7 @@ class MemoryClearRequest(BaseModel):
 
 
 def _get_svc(user: dict) -> object:
-    user_id = str(user.get("sub", ""))
+    user_id = str(user.get("id", user.get("sub", "")))
     return get_memory_service(user_id=user_id)
 
 
