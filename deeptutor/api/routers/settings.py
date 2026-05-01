@@ -34,7 +34,7 @@ DEFAULT_SIDEBAR_NAV_ORDER = {
 }
 
 DEFAULT_UI_SETTINGS = {
-    "theme": "light",
+    "theme": "snow",
     "language": "en",
     "sidebar_description": "✨ Data Intelligence Lab @ HKU",
     "sidebar_nav_order": DEFAULT_SIDEBAR_NAV_ORDER,
@@ -47,18 +47,18 @@ class SidebarNavOrder(BaseModel):
 
 
 class UISettings(BaseModel):
-    theme: Literal["light", "dark", "glass", "snow"] = "light"
-    language: Literal["zh", "en"] = "en"
+    theme: Literal["light", "dark", "glass", "snow", "nexus"] = "light"
+    language: Literal["zh", "en", "vi"] = "en"
     sidebar_description: Optional[str] = None
     sidebar_nav_order: Optional[SidebarNavOrder] = None
 
 
 class ThemeUpdate(BaseModel):
-    theme: Literal["light", "dark", "glass", "snow"]
+    theme: Literal["light", "dark", "glass", "snow", "nexus"]
 
 
 class LanguageUpdate(BaseModel):
-    language: Literal["zh", "en"]
+    language: Literal["zh", "en", "vi"]
 
 
 class SidebarDescriptionUpdate(BaseModel):
