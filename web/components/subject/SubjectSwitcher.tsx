@@ -7,16 +7,16 @@ import { ChevronDown } from "lucide-react";
 
 export default function SubjectSwitcher() {
   const { t } = useTranslation();
-  const { subjects, activeSubject, setActiveSubject } = useSubject();
+  const { subjects, activeSubject, switchSubject } = useSubject();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleSelect = useCallback(
     (id: string) => {
-      setActiveSubject(id);
+      switchSubject(id);
       setOpen(false);
     },
-    [setActiveSubject],
+    [switchSubject],
   );
 
   const handleToggle = useCallback(() => {
