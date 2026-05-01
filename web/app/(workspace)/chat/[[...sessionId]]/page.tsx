@@ -251,7 +251,7 @@ export default function ChatPage() {
   const { t } = useTranslation();
   const sessionIdParam = params.sessionId?.[0] ?? null;
   const { isAdmin, isManager } = useAuth();
-  const { activeSubject } = useSubject();
+  const { activeSubject, setActiveSubject } = useSubject();
   const visibleCapabilities = useMemo(
     () => (isAdmin || isManager ? CAPABILITIES : CAPABILITIES.filter((c) => c.value !== "deep_research")),
     [isAdmin, isManager],

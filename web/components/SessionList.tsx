@@ -196,7 +196,7 @@ export default function SessionList({
             {groupIdx > 0 && (
               <div className="my-1 ml-3 mr-2 border-t border-[var(--border)]/20" />
             )}
-            <div className="px-3 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]/40">
+            <div className="px-3 py-0.5 text-[10px] font-medium uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
               {label}
             </div>
             {items.map((session) => {
@@ -214,16 +214,16 @@ export default function SessionList({
                   }}
                   role="button"
                   tabIndex={0}
-                  className={`group flex items-center gap-2 rounded-r-lg py-1 pl-3 pr-2 transition-colors ${
+                   className={`group flex items-center gap-2 rounded-lg py-1 pl-2 pr-2 transition-colors ${
                     active
-                      ? "bg-[var(--background)]/50 text-[var(--foreground)]"
-                      : "text-[var(--muted-foreground)] hover:bg-[var(--background)]/40 hover:text-[var(--foreground)]"
-                  }`}
+                      ? "bg-[var(--primary)]/[0.08] text-[var(--foreground)]"
+                      : "text-[var(--muted-foreground)] hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
+                    }`}
                 >
                   <span
                     className={`block h-1.5 w-1.5 shrink-0 rounded-full ${
                       active
-                        ? "bg-[var(--foreground)]/60"
+                        ? "bg-[var(--primary)]"
                         : statusColor(session.status)
                     }`}
                   />
@@ -299,7 +299,7 @@ export default function SessionList({
     <div className="space-y-3">
       {grouped.map(([label, items]) => (
         <div key={label}>
-          <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
+          <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--muted-foreground)" }}>
             {label}
           </div>
           <div className="space-y-px">
