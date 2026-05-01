@@ -1157,10 +1157,10 @@ export default function ChatPage() {
           <div className="flex flex-1 min-h-0 flex-col items-center justify-center animate-fade-in">
             <div className="text-center">
               <h1 className="font-serif text-[36px] font-medium tracking-[-0.01em] text-[var(--foreground)]">
-                {activeSubject ? t("Let's study {{subject}}!", { subject: activeSubject.name }) : t("What would you like to learn?")}
+                {activeSubject ? t("Let's study {{subject}}!", { subject: t(`subject.${activeSubject.id}`) }) : t("What would you like to learn?")}
               </h1>
               <p className="mt-4 text-[15px] text-[var(--muted-foreground)]">
-                {activeSubject ? t("I'm here to help you master {{subject}}.", { subject: activeSubject.name }) : t("Ask anything — I'm here to help you understand.")}
+                {activeSubject ? t("I'm here to help you master {{subject}}.", { subject: t(`subject.${activeSubject.id}`) }) : t("Ask anything — I'm here to help you understand.")}
               </p>
             </div>
           </div>

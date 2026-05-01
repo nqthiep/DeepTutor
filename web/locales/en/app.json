@@ -1334,5 +1334,11 @@
   "Learn better with AI guidance": "Learn better with AI guidance",
   "Subject": "Subject",
   "Let's study {{subject}}!": "Let's study {{subject}}!",
-  "I'm here to help you master {{subject}}.": "I'm here to help you master {{subject}}."
+  "I'm here to help you master {{subject}}.": "I'm here to help you master {{subject}}.",
+  "subject.math": "Mathematics",
+  "subject.physics": "Physics",
+  "subject.chemistry": "Chemistry",
+  "subject.literature": "Literature",
+  "subject.english": "English",
+  "subject.subject": "Subject"
 }

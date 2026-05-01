@@ -1330,5 +1330,11 @@
   "Learn better with AI guidance": "在AI指导下更好地学习",
   "Subject": "科目",
   "Let's study {{subject}}!": "让我们学习{{subject}}吧！",
-  "I'm here to help you master {{subject}}.": "我来帮助你掌握{{subject}}。"
+  "I'm here to help you master {{subject}}.": "我来帮助你掌握{{subject}}。",
+  "subject.math": "数学",
+  "subject.physics": "物理",
+  "subject.chemistry": "化学",
+  "subject.literature": "文学",
+  "subject.english": "英语",
+  "subject.subject": "科目"
 }

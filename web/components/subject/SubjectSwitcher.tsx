@@ -26,6 +26,9 @@ export default function SubjectSwitcher() {
   if (!subjects.length) return null;
 
   const icon = activeSubject ? subjectIcon(activeSubject.icon) : "\uD83D\uDCDA";
+  const label = activeSubject
+    ? t(`subject.${activeSubject.id}`)
+    : t("Subject");
 
   return (
     <div className="relative" ref={menuRef}>
@@ -38,7 +41,7 @@ export default function SubjectSwitcher() {
         }`}
       >
         <span>{icon}</span>
-        <span>{activeSubject ? activeSubject.name : t("Subject")}</span>
+        <span>{label}</span>
         <ChevronDown
           size={12}
           className={`transition-transform ${open ? "rotate-180" : ""}`}
@@ -63,7 +66,7 @@ export default function SubjectSwitcher() {
                 }`}
               >
                 <span>{subjectIcon(s.icon)}</span>
-                <span>{s.name}</span>
+                <span>{t(`subject.${s.id}`)}</span>
               </button>
             ))}
           </div>

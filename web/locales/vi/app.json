@@ -1278,5 +1278,11 @@
   "Learn better with AI guidance": "Học tốt hơn với sự hướng dẫn từ AI",
   "Subject": "Môn học",
   "Let's study {{subject}}!": "Hãy học {{subject}} nào!",
-  "I'm here to help you master {{subject}}.": "Tôi sẽ giúp bạn chinh phục {{subject}}."
+  "I'm here to help you master {{subject}}.": "Tôi sẽ giúp bạn chinh phục {{subject}}.",
+  "subject.math": "Toán học",
+  "subject.physics": "Vật lý",
+  "subject.chemistry": "Hoá học",
+  "subject.literature": "Văn học",
+  "subject.english": "Tiếng Anh",
+  "subject.subject": "Môn học"
 }
