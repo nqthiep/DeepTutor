@@ -268,21 +268,18 @@ class PathService:
     def get_research_reports_dir(self) -> Path:
         return self.get_research_dir() / "reports"
 
-    def get_co_writer_dir(self) -> Path:
-        return self.get_workspace_feature_dir("co-writer")
+    def get_co_writer_dir(self, user_id: str = "") -> Path:
+        base = self.get_workspace_feature_dir("co-writer")
+        return base / user_id if user_id else base
 
-    def get_co_writer_history_file(self) -> Path:
-        return self.get_co_writer_dir() / "history.json"
+    def get_co_writer_history_file(self, user_id: str = "") -> Path:
+        return self.get_co_writer_dir(user_id=user_id) / "history.json"
 
-    def get_co_writer_tool_calls_dir(self) -> Path:
-        return self.get_co_writer_dir() / "tool_calls"
+    def get_co_writer_documents_dir(self, user_id: str = "") -> Path:
+        return self.get_co_writer_dir(user_id=user_id) / "documents"
 
-    def get_co_writer_audio_dir(self) -> Path:
-        return self.get_co_writer_dir() / "audio"
-
-    def get_co_writer_docs_dir(self) -> Path:
-        """Root directory holding co-writer documents (one sub-directory per doc)."""
-        return self.get_co_writer_dir() / "documents"
+    def get_co_writer_tool_calls_dir(self, user_id: str = "") -> Path:
+        return self.get_co_writer_dir(user_id=user_id) / "tool_calls"
 
     def get_co_writer_doc_root(self, doc_id: str) -> Path:
         """Per-document root directory."""
@@ -293,13 +290,12 @@ class PathService:
 
     # ── Book Engine paths ────────────────────────────────────────────────
 
-    def get_book_dir(self) -> Path:
-        """Root directory holding all books (one sub-directory per book)."""
-        return self.get_workspace_feature_dir("book")
+    def get_book_dir(self, user_id: str = "") -> Path:
+        base = self.get_workspace_feature_dir("book")
+        return base / user_id if user_id else base
 
-    def get_book_root(self, book_id: str) -> Path:
-        """Per-book root directory."""
-        return self.get_book_dir() / f"book_{book_id}"
+    def get_book_data_dir(self, book_id: str, user_id: str = "") -> Path:
+        return self.get_book_dir(user_id=user_id) / f"book_{book_id}"
 
     def get_book_manifest_file(self, book_id: str) -> Path:
         return self.get_book_root(book_id) / "manifest.json"

@@ -839,10 +839,11 @@ class SQLiteSessionStore:
 
     # ── Notebook entries ──────────────────────────────────────────────
 
-    def _upsert_notebook_entries_sync(self, session_id: str, items: list[dict[str, Any]]) -> int:
+    def _upsert_notebook_entries_sync(self, session_id: str, items: list[dict[str, Any]], user_id: str = "") -> int:
         if not items:
             return 0
         now = time.time()
+        resolved_user_id = (user_id or "").strip()
         with self._connect() as conn:
             if (
                 conn.execute("SELECT id FROM sessions WHERE id = ?", (session_id,)).fetchone()
@@ -861,8 +862,8 @@ class SQLiteSessionStore:
                         session_id, question_id, question, question_type,
                         options_json, correct_answer, explanation, difficulty,
                         user_answer, is_correct, bookmarked, followup_session_id,
-                        created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '', ?, ?)
+                        created_at, updated_at, user_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '', ?, ?, ?)
                     ON CONFLICT(session_id, question_id) DO UPDATE SET
                         user_answer = excluded.user_answer,
                         is_correct = excluded.is_correct,
@@ -881,14 +882,15 @@ class SQLiteSessionStore:
                         1 if item.get("is_correct") else 0,
                         now,
                         now,
+                        resolved_user_id,
                     ),
                 )
                 upserted += 1
             conn.commit()
         return upserted
 
-    async def upsert_notebook_entries(self, session_id: str, items: list[dict[str, Any]]) -> int:
-        return await self._run(self._upsert_notebook_entries_sync, session_id, items)
+    async def upsert_notebook_entries(self, session_id: str, items: list[dict[str, Any]], user_id: str = "") -> int:
+        return await self._run(self._upsert_notebook_entries_sync, session_id, items, user_id)
 
     @staticmethod
     def _serialize_notebook_entry(row: sqlite3.Row) -> dict[str, Any]:
