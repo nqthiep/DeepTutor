@@ -1,22 +1,28 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubject, subjectIcon } from "@/context/SubjectContext";
+import { useUnifiedChat } from "@/context/UnifiedChatContext";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 
 export default function SubjectSwitcher() {
   const { t } = useTranslation();
-  const { subjects, activeSubject, switchSubject } = useSubject();
+  const router = useRouter();
+  const { subjects, activeSubject, setActiveSubject } = useSubject();
+  const { newSession } = useUnifiedChat();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleSelect = useCallback(
     (id: string) => {
-      switchSubject(id);
+      setActiveSubject(id);
+      newSession();
+      router.push("/chat");
       setOpen(false);
     },
-    [switchSubject],
+    [setActiveSubject, newSession, router],
   );
 
   const handleToggle = useCallback(() => {

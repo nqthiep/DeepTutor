@@ -1,7 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { listSubjects, type Subject } from "@/lib/subject-api";
 
 const STORAGE_KEY = "deeptutor-subject";
@@ -10,7 +9,6 @@ interface SubjectContextValue {
   subjects: Subject[];
   activeSubject: Subject | null;
   setActiveSubject: (id: string | null) => void;
-  switchSubject: (id: string) => void;
   loading: boolean;
   refresh: () => Promise<void>;
 }
@@ -39,11 +37,9 @@ function subjectIcon(code: string): string {
 }
 
 export function SubjectProvider({ children }: { children: ReactNode }) {
-  const router = useRouter();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [activeSubject, setActiveSubjectState] = useState<Subject | null>(null);
   const [loading, setLoading] = useState(true);
-  const restored = useRef(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -63,7 +59,6 @@ export function SubjectProvider({ children }: { children: ReactNode }) {
         const match = list.find((s) => s.id === storedId && s.enabled);
         if (match) setActiveSubjectState(match);
       }
-      restored.current = true;
       setLoading(false);
     });
   }, [refresh]);
@@ -84,20 +79,8 @@ export function SubjectProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const switchSubject = useCallback((id: string) => {
-    setSubjects((prev) => {
-      const match = prev.find((s) => s.id === id);
-      if (match) {
-        setActiveSubjectState(match);
-        localStorage.setItem(STORAGE_KEY, id);
-      }
-      return prev;
-    });
-    router.push("/chat");
-  }, [router]);
-
   return (
-    <SubjectContext.Provider value={{ subjects, activeSubject, setActiveSubject, switchSubject, loading, refresh }}>
+    <SubjectContext.Provider value={{ subjects, activeSubject, setActiveSubject, loading, refresh }}>
       {children}
     </SubjectContext.Provider>
   );
