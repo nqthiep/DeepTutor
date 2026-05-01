@@ -1331,5 +1331,8 @@
   "Notes": "Notes",
   "Configure your preferences": "Configure your preferences",
   "Your notebooks and quiz questions": "Your notebooks and quiz questions",
-  "Learn better with AI guidance": "Learn better with AI guidance"
+  "Learn better with AI guidance": "Learn better with AI guidance",
+  "Subject": "Subject",
+  "Let's study {{subject}}!": "Let's study {{subject}}!",
+  "I'm here to help you master {{subject}}.": "I'm here to help you master {{subject}}."
 }

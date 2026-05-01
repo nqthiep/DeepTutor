@@ -1275,5 +1275,8 @@
   "Notes": "Ghi chú",
   "Configure your preferences": "Tùy chỉnh giao diện của bạn",
   "Your notebooks and quiz questions": "Sổ tay và câu hỏi của bạn",
-  "Learn better with AI guidance": "Học tốt hơn với sự hướng dẫn từ AI"
+  "Learn better with AI guidance": "Học tốt hơn với sự hướng dẫn từ AI",
+  "Subject": "Môn học",
+  "Let's study {{subject}}!": "Hãy học {{subject}} nào!",
+  "I'm here to help you master {{subject}}.": "Tôi sẽ giúp bạn chinh phục {{subject}}."
 }

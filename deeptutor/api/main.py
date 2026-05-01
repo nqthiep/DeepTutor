@@ -224,6 +224,7 @@ from deeptutor.api.routers import (
     settings,
     skills,
     solve,
+    subjects,
     system,
     tutorbot,
     unified_ws,
@@ -252,6 +253,7 @@ app.include_router(plugins_api.router, prefix="/api/v1/plugins", tags=["plugins"
 app.include_router(agent_config.router, prefix="/api/v1/agent-config", tags=["agent-config"])
 app.include_router(vision_solver.router, prefix="/api/v1", tags=["vision-solver"])
 app.include_router(tutorbot.router, prefix="/api/v1/tutorbot", tags=["tutorbot"])
+app.include_router(subjects.router, prefix="/api/v1/subjects", tags=["subjects"])
 app.include_router(attachments.router, prefix="/api/attachments", tags=["attachments"])
 
 # Unified WebSocket endpoint

@@ -14,6 +14,7 @@ import type { User } from "@/lib/auth-api";
 import Modal from "@/components/common/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import SubjectAdminPanel from "@/components/subject/SubjectAdminPanel";
 import {
   Loader2,
   Search,
@@ -28,6 +29,7 @@ import {
   Check,
   X,
   Shield,
+  BookOpen,
 } from "lucide-react";
 
 const ROLES = ["learner", "manager", "administrator"] as const;
@@ -36,6 +38,7 @@ const STATUS_FILTERS = ["all", "active", "inactive"] as const;
 
 export default function AdminPage() {
   const { user: me, getAccessToken, isAdmin } = useAuth();
+  const [adminTab, setAdminTab] = useState<"users" | "subjects">("users");
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,27 +162,43 @@ export default function AdminPage() {
           <Shield size={18} className="text-[var(--muted-foreground)]" />
           <div>
             <div className="text-sm font-semibold text-[var(--foreground)]">
-              User Management
+              Admin
             </div>
             <div className="text-xs text-[var(--muted-foreground)]">
-              Manage users and permissions
+              Manage users and learning subjects
             </div>
           </div>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          icon={<UserPlus size={16} />}
-          onClick={() => setShowCreateModal(true)}
-        >
-          Add User
-        </Button>
+        <div className="flex items-center gap-1 rounded-lg bg-[var(--muted)] p-0.5">
+          <button
+            onClick={() => setAdminTab("users")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
+              adminTab === "users"
+                ? "bg-[var(--card)] text-[var(--foreground)] shadow-sm"
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            }`}
+          >
+            <Shield size={12} />
+            Users
+          </button>
+          <button
+            onClick={() => setAdminTab("subjects")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
+              adminTab === "subjects"
+                ? "bg-[var(--card)] text-[var(--foreground)] shadow-sm"
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            }`}
+          >
+            <BookOpen size={12} />
+            Subjects
+          </button>
+        </div>
       </header>
 
+      {adminTab === "users" && (
       <div className="mx-auto max-w-5xl p-6">
-
-      {/* Search + Filters */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search
             size={16}
@@ -223,6 +242,15 @@ export default function AdminPage() {
             </option>
           ))}
         </select>
+        </div>
+        <Button
+          variant="primary"
+          size="sm"
+          icon={<UserPlus size={16} />}
+          onClick={() => setShowCreateModal(true)}
+        >
+          Add User
+        </Button>
       </div>
 
       {/* Loading */}
@@ -383,6 +411,14 @@ export default function AdminPage() {
           </table>
         </div>
       )}
+      </div>
+      )}
+
+      {adminTab === "subjects" && (
+        <div className="flex-1 overflow-y-auto">
+          <SubjectAdminPanel />
+        </div>
+      )}
 
       {/* Create User Modal */}
       {showCreateModal && (
@@ -427,9 +463,8 @@ export default function AdminPage() {
         />
       )}
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 // ─── Create User Modal ─────────────────────────────────────────────────────
 

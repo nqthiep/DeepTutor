@@ -1327,5 +1327,8 @@
   "Profile updated": "个人资料已更新",
   "Password changed": "密码已更改",
   "Signing out...": "正在退出...",
-  "Learn better with AI guidance": "在AI指导下更好地学习"
+  "Learn better with AI guidance": "在AI指导下更好地学习",
+  "Subject": "科目",
+  "Let's study {{subject}}!": "让我们学习{{subject}}吧！",
+  "I'm here to help you master {{subject}}.": "我来帮助你掌握{{subject}}。"
 }

@@ -38,6 +38,7 @@ import { useAppShell } from "@/context/AppShellContext";
 import type { FilePreviewSource } from "@/components/chat/preview/previewerFor";
 import type { StreamEvent } from "@/lib/unified-ws";
 import { useAuth } from "@/context/AuthContext";
+import { useSubject } from "@/context/SubjectContext";
 import {
   extractBase64FromDataUrl,
   readFileAsDataUrl,
@@ -87,6 +88,10 @@ const NotebookRecordPicker = dynamic(
   {
     ssr: false,
   },
+);
+const SubjectSwitcher = dynamic(
+  () => import("@/components/subject/SubjectSwitcher"),
+  { ssr: false },
 );
 const HistorySessionPicker = dynamic(
   () => import("@/components/chat/HistorySessionPicker"),
@@ -246,6 +251,7 @@ export default function ChatPage() {
   const { t } = useTranslation();
   const sessionIdParam = params.sessionId?.[0] ?? null;
   const { isAdmin, isManager } = useAuth();
+  const { activeSubject } = useSubject();
   const visibleCapabilities = useMemo(
     () => (isAdmin || isManager ? CAPABILITIES : CAPABILITIES.filter((c) => c.value !== "deep_research")),
     [isAdmin, isManager],
@@ -1106,14 +1112,17 @@ export default function ChatPage() {
       className="chat-preview-shell flex h-full flex-col overflow-hidden bg-[var(--background)]"
     >
       <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-6 py-3">
-        <div className="flex items-center gap-3">
-          <MessageSquare size={18} className="text-[var(--muted-foreground)]" />
-          <div>
-            <div className="text-sm font-semibold text-[var(--foreground)]">
-              {t(activeCap.label)}
-            </div>
-            <div className="text-xs text-[var(--muted-foreground)]">
-              {t("Learn better with AI guidance")}
+        <div className="flex items-center gap-2">
+          <SubjectSwitcher />
+          <div className="flex items-center gap-3">
+            <MessageSquare size={18} className="text-[var(--muted-foreground)]" />
+            <div>
+              <div className="text-sm font-semibold text-[var(--foreground)]">
+                {t(activeCap.label)}
+              </div>
+              <div className="text-xs text-[var(--muted-foreground)]">
+                {t("Learn better with AI guidance")}
+              </div>
             </div>
           </div>
         </div>
@@ -1148,10 +1157,10 @@ export default function ChatPage() {
           <div className="flex flex-1 min-h-0 flex-col items-center justify-center animate-fade-in">
             <div className="text-center">
               <h1 className="font-serif text-[36px] font-medium tracking-[-0.01em] text-[var(--foreground)]">
-                {t("What would you like to learn?")}
+                {activeSubject ? t("Let's study {{subject}}!", { subject: activeSubject.name }) : t("What would you like to learn?")}
               </h1>
               <p className="mt-4 text-[15px] text-[var(--muted-foreground)]">
-                {t("Ask anything — I'm here to help you understand.")}
+                {activeSubject ? t("I'm here to help you master {{subject}}.", { subject: activeSubject.name }) : t("Ask anything — I'm here to help you understand.")}
               </p>
             </div>
           </div>
