@@ -1207,7 +1207,6 @@
   "Select a file to preview": "Chọn tệp để xem trước",
   "Pick any document from the list on the left to view it here without leaving the knowledge base.": "Chọn bất kỳ tài liệu nào từ danh sách bên trái để xem tại đây mà không cần rời khỏi kho tri thức.",
   "Collapse": "Thu gọn",
-  "Expand": "Mở rộng",
   "Show file list": "Hiện danh sách tệp",
   "Hide file list": "Ẩn danh sách tệp",
   "No files yet. Add one using the Add Documents tab.": "Chưa có tệp nào. Thêm tệp bằng tab Thêm tài liệu.",
@@ -1271,5 +1270,10 @@
   "Profile updated": "Hồ sơ đã cập nhật",
   "Saved": "Đã lưu",
   "Password changed": "Mật khẩu đã đổi",
-  "Signing out...": "Đang đăng xuất..."
+  "Signing out...": "Đang đăng xuất...",
+  "Books": "Sách",
+  "Notes": "Ghi chú",
+  "Configure your preferences": "Tùy chỉnh giao diện của bạn",
+  "Your notebooks and quiz questions": "Sổ tay và câu hỏi của bạn",
+  "Learn better with AI guidance": "Học tốt hơn với sự hướng dẫn từ AI"
 }

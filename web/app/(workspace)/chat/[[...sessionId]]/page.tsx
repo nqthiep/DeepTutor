@@ -1113,7 +1113,7 @@ export default function ChatPage() {
               {t(activeCap.label)}
             </div>
             <div className="text-xs text-[var(--muted-foreground)]">
-              Chat with AI assistant
+              {t("Learn better with AI guidance")}
             </div>
           </div>
         </div>

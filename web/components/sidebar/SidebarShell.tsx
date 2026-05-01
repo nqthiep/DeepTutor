@@ -9,10 +9,12 @@ import { useAuth } from "@/context/AuthContext";
 import {
   BookOpen,
   Bot,
+  Brain,
   Github,
   LayoutGrid,
   Library,
   MessageSquare,
+  NotebookPen,
   PanelLeftClose,
   PanelLeftOpen,
   PenLine,
@@ -42,6 +44,13 @@ const PRIMARY_NAV: NavEntry[] = [
   { href: "/book", label: "Book", icon: Library },
   { href: "/knowledge", label: "Knowledge", icon: BookOpen },
   { href: "/space", label: "Space", icon: LayoutGrid },
+];
+
+const LEARNER_NAV: NavEntry[] = [
+  { href: "/chat", label: "Chat", icon: MessageSquare },
+  { href: "/book", label: "Books", icon: Library },
+  { href: "/learner-notes", label: "Notes", icon: NotebookPen },
+  { href: "/space/memory", label: "Memory", icon: Brain },
 ];
 
 const ADMIN_NAV: NavEntry[] = [
@@ -85,7 +94,8 @@ export function SidebarShell({
   const { sidebarCollapsed: collapsed, setSidebarCollapsed: setCollapsed } =
     useAppShell();
 
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isLearner } = useAuth();
+  const effectiveNav = isLearner ? LEARNER_NAV : PRIMARY_NAV;
 
   const userInitial = (user?.display_name || user?.email || "U").charAt(0).toUpperCase();
   const userName = user?.display_name || user?.email?.split("@")[0] || "User";
@@ -142,7 +152,7 @@ export function SidebarShell({
 
         {/* Primary nav */}
         <nav className="flex w-full flex-col items-center gap-1.5 px-1.5">
-          {PRIMARY_NAV.map((item) => {
+          {effectiveNav.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
               <Link
@@ -162,7 +172,7 @@ export function SidebarShell({
               </Link>
             );
           })}
-          {isAdmin && ADMIN_NAV.map((item) => {
+          {isAdmin && !isLearner && ADMIN_NAV.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
               <Link
@@ -271,7 +281,7 @@ export function SidebarShell({
             <span>{t("New Chat")}</span>
           </button>
 
-          {PRIMARY_NAV.map((item) => {
+          {effectiveNav.map((item) => {
             const active = pathname.startsWith(item.href);
             const hasSessionsBelow =
               item.href === "/chat" &&
@@ -279,7 +289,7 @@ export function SidebarShell({
               onSelectSession &&
               onRenameSession &&
               onDeleteSession;
-            const hasBots = item.href === "/agents";
+            const hasBots = item.href === "/agents" && !isLearner;
             return (
               <div key={item.href}>
                 <Link
@@ -312,7 +322,7 @@ export function SidebarShell({
               </div>
             );
           })}
-          {isAdmin && ADMIN_NAV.map((item) => {
+          {isAdmin && !isLearner && ADMIN_NAV.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
               <Link

@@ -1,8 +1,27 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import KnowledgePage from "@/components/knowledge/KnowledgePage";
+import { useAuth } from "@/context/AuthContext";
+
+function KnowledgeOrRedirect() {
+  const { isLearner } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLearner) {
+      router.replace("/learner-notes");
+    }
+  }, [isLearner, router]);
+
+  if (isLearner) {
+    return null;
+  }
+
+  return <KnowledgePage />;
+}
 
 export default function Page() {
   return (
@@ -13,7 +32,7 @@ export default function Page() {
         </div>
       }
     >
-      <KnowledgePage />
+      <KnowledgeOrRedirect />
     </Suspense>
   );
 }

@@ -376,7 +376,7 @@ export default memo(function ChatComposer({
 
       <div className="relative">
         <div
-          className={`relative rounded-2xl border bg-[var(--card)] shadow-[0_1px_8px_rgba(0,0,0,0.03)] transition-colors ${
+          className={`relative rounded-2xl border bg-[var(--card)] shadow-[0_2px_16px_rgba(0,0,0,0.08)] transition-colors ${
             dragging
               ? "border-[var(--primary)] bg-[var(--primary)]/[0.03]"
               : "border-[var(--border)]"

@@ -531,7 +531,7 @@ function DimensionField({
 
 function SettingsPageContent() {
   const { t } = useTranslation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isLearner } = useAuth();
 
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [theme, setTheme] = useState<
@@ -966,9 +966,11 @@ function SettingsPageContent() {
               </p>
             ) : (
               <p className="mt-1 text-[13px] text-[var(--muted-foreground)]">
-                {hasUnsavedChanges
-                  ? t("Draft has unsaved changes")
-                  : t("All changes saved")}
+                {isLearner
+                  ? t("Configure your preferences")
+                  : hasUnsavedChanges
+                    ? t("Draft has unsaved changes")
+                    : t("All changes saved")}
               </p>
             )}
           </div>
