@@ -803,7 +803,7 @@ async def delete_knowledge_base(kb_name: str, user: dict = Depends(require_role(
 
 
 @router.get("/tasks/{task_id}/stream")
-async def stream_task_logs(task_id: str, user: dict = Depends(get_current_user)):
+async def stream_task_logs(task_id: str):
     """Stream task-specific logs for knowledge-base operations."""
     manager = get_task_stream_manager()
     manager.ensure_task(task_id)
