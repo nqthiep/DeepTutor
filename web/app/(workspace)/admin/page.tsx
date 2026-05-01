@@ -169,34 +169,39 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1 rounded-lg bg-[var(--muted)] p-0.5">
+      </header>
+
+      <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+        <div className="mx-auto max-w-[960px] px-6 py-6">
+
+        {/* Tabs */}
+        <div className="mb-6 flex items-center gap-1 border-b border-[var(--border)]/50 pb-3">
           <button
             onClick={() => setAdminTab("users")}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
               adminTab === "users"
-                ? "bg-[var(--card)] text-[var(--foreground)] shadow-sm"
+                ? "bg-[var(--muted)] font-medium text-[var(--foreground)]"
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             }`}
           >
-            <Shield size={12} />
+            <Shield size={14} />
             Users
           </button>
           <button
             onClick={() => setAdminTab("subjects")}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
               adminTab === "subjects"
-                ? "bg-[var(--card)] text-[var(--foreground)] shadow-sm"
+                ? "bg-[var(--muted)] font-medium text-[var(--foreground)]"
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             }`}
           >
-            <BookOpen size={12} />
+            <BookOpen size={14} />
             Subjects
           </button>
         </div>
-      </header>
 
       {adminTab === "users" && (
-      <div className="mx-auto max-w-5xl p-6">
+      <div>
         <div className="mb-4 flex items-center justify-between">
           <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
@@ -415,10 +420,11 @@ export default function AdminPage() {
       )}
 
       {adminTab === "subjects" && (
-        <div className="flex-1 overflow-y-auto">
-          <SubjectAdminPanel />
-        </div>
+        <SubjectAdminPanel />
       )}
+
+        </div>
+      </div>
 
       {/* Create User Modal */}
       {showCreateModal && (

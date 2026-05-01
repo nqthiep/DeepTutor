@@ -88,22 +88,6 @@ export default function SubjectAdminPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-[18px] font-semibold text-[var(--foreground)]">Subjects</h2>
-          <p className="mt-0.5 text-[13px] text-[var(--muted-foreground)]">
-            Manage learning subjects available to learners
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3 py-1.5 text-[12px] font-medium text-[var(--background)] transition-opacity hover:opacity-80"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add Subject
-        </button>
-      </div>
-
       {/* ── Create form ── */}
       {showForm && (
         <div className="rounded-xl border border-[var(--border)] p-5">
@@ -189,6 +173,15 @@ export default function SubjectAdminPanel() {
 
       {/* ── Subject list ── */}
       <div className="space-y-2">
+        <div className="flex items-center justify-end">
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)]/50 px-3 py-1.5 text-[12px] font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--border)] hover:text-[var(--foreground)]"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Subject
+          </button>
+        </div>
         {subjects.map((s) => (
           <div
             key={s.id}
