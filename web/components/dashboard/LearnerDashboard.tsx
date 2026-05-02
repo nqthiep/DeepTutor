@@ -84,6 +84,7 @@ export default function LearnerDashboard() {
   if (!data) return null;
 
   const hasActivity = data.activity.total_sessions > 0 || data.quiz.total > 0 || data.books.length > 0;
+  const hasProfile = Boolean(data.profile.identity || data.summary.current_focus);
 
   const activityChart = {
     labels: data.activity.daily.map((d) => d.label),
@@ -156,115 +157,125 @@ export default function LearnerDashboard() {
         ) : (
           <>
             {/* ── Learning Goals & Profile ── */}
-            {(data.profile.identity || data.summary.current_focus) && (
-              <div className="mb-6 grid gap-4 sm:grid-cols-2">
-                <Link
-                  href="/space/memory"
-                  className="group rounded-xl border border-[var(--border)] p-4 transition-colors hover:border-[var(--border)]/80 hover:bg-[var(--muted)]/30"
-                >
-                  <div className="mb-2 flex items-center gap-2">
-                    <Brain size={15} className="text-[var(--muted-foreground)]" />
-                    <h3 className="text-[13px] font-semibold text-[var(--foreground)]">{t("Learning Goals")}</h3>
-                    <ArrowRight size={12} className="ml-auto text-[var(--muted-foreground)]/40 opacity-0 transition-opacity group-hover:opacity-100" />
-                  </div>
-                  {data.profile.identity && (
+            <div className="mb-6 grid gap-4 sm:grid-cols-2">
+              <Link
+                href="/space/memory"
+                className="group rounded-xl border border-[var(--border)] p-4 transition-colors hover:border-[var(--border)]/80 hover:bg-[var(--muted)]/30"
+              >
+                <div className="mb-2 flex items-center gap-2">
+                  <Brain size={15} className="text-[var(--muted-foreground)]" />
+                  <h3 className="text-[13px] font-semibold text-[var(--foreground)]">{t("Learning Goals")}</h3>
+                  <ArrowRight size={12} className="ml-auto text-[var(--muted-foreground)]/40 opacity-0 transition-opacity group-hover:opacity-100" />
+                </div>
+                {data.profile.identity ? (
+                  <>
                     <p className="mb-1 text-[12px] leading-relaxed text-[var(--muted-foreground)]">
                       <span className="font-medium text-[var(--foreground)]">{t("Identity")}:</span> {data.profile.identity}
                     </p>
-                  )}
-                  {data.profile.knowledge_level && (
-                    <p className="mb-1 text-[12px] leading-relaxed text-[var(--muted-foreground)]">
-                      <span className="font-medium text-[var(--foreground)]">{t("Level")}:</span> {data.profile.knowledge_level}
-                    </p>
-                  )}
-                  {data.summary.current_focus && (
-                    <p className="text-[12px] leading-relaxed text-[var(--muted-foreground)]">
-                      <span className="font-medium text-[var(--foreground)]">{t("Focus")}:</span> {data.summary.current_focus}
-                    </p>
-                  )}
-                </Link>
-                <div className="rounded-xl border border-[var(--border)] p-4">
-                  <div className="mb-2 flex items-center gap-2">
-                    <Target size={15} className="text-[var(--muted-foreground)]" />
-                    <h3 className="text-[13px] font-semibold text-[var(--foreground)]">{t("Quick Stats")}</h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <StatItem icon={TrendingUp} label={t("Sessions")} value={String(data.activity.total_sessions)} />
-                    <StatItem icon={Clock} label={t("This Week")} value={String(data.activity.sessions_this_week)} />
-                    <StatItem icon={Target} label={t("Accuracy")} value={data.quiz.total ? `${data.quiz.accuracy}%` : "—"} />
-                    <StatItem icon={Flame} label={t("Messages")} value={String(data.activity.total_messages)} />
-                  </div>
+                    {data.profile.knowledge_level && (
+                      <p className="mb-1 text-[12px] leading-relaxed text-[var(--muted-foreground)]">
+                        <span className="font-medium text-[var(--foreground)]">{t("Level")}:</span> {data.profile.knowledge_level}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-[12px] italic text-[var(--muted-foreground)]/60">
+                    {t("Set your learning goals in Memory")}
+                  </p>
+                )}
+                {data.summary.current_focus && (
+                  <p className="mt-1 text-[12px] leading-relaxed text-[var(--muted-foreground)]">
+                    <span className="font-medium text-[var(--foreground)]">{t("Focus")}:</span> {data.summary.current_focus}
+                  </p>
+                )}
+              </Link>
+              <div className="rounded-xl border border-[var(--border)] p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <Target size={15} className="text-[var(--muted-foreground)]" />
+                  <h3 className="text-[13px] font-semibold text-[var(--foreground)]">{t("Quick Stats")}</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <StatItem icon={TrendingUp} label={t("Sessions")} value={String(data.activity.total_sessions)} />
+                  <StatItem icon={Clock} label={t("This Week")} value={String(data.activity.sessions_this_week)} />
+                  <StatItem icon={Target} label={t("Accuracy")} value={data.quiz.total ? `${data.quiz.accuracy}%` : "—"} />
+                  <StatItem icon={Flame} label={t("Messages")} value={String(data.activity.total_messages)} />
                 </div>
               </div>
-            )}
+            </div>
 
             {/* ── Strengths & Weaknesses ── */}
-            {(strengths.length > 0 || subjectAccuracy.length > 0) && (
-              <div className="mb-6 grid gap-4 sm:grid-cols-2">
-                {strengths.length > 0 && (
-                  <div className="rounded-xl border border-[var(--border)] p-4">
-                    <h3 className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[var(--foreground)]">
-                      <CheckCircle2 size={14} className="text-emerald-500" />
-                      {t("Strengths & Weaknesses")}
-                    </h3>
-                    <div className="space-y-2">
-                      {strengths.map((s) => (
-                        <div key={s.label}>
-                          <div className="mb-0.5 flex items-center justify-between text-[12px]">
-                            <span className="text-[var(--muted-foreground)]">{s.label}</span>
-                            <span className={s.accuracy >= 70 ? "text-emerald-600" : s.accuracy >= 40 ? "text-amber-600" : "text-red-500"}>
-                              {s.accuracy}%
-                            </span>
-                          </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--muted)]">
-                            <div
-                              className={`h-full rounded-full transition-all ${
-                                s.accuracy >= 70 ? "bg-emerald-500" : s.accuracy >= 40 ? "bg-amber-500" : "bg-red-500"
-                              }`}
-                              style={{ width: `${s.accuracy}%` }}
-                            />
-                          </div>
+            <div className="mb-6 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-[var(--border)] p-4">
+                <h3 className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[var(--foreground)]">
+                  <CheckCircle2 size={14} className="text-emerald-500" />
+                  {t("Strengths & Weaknesses")}
+                </h3>
+                {strengths.length > 0 ? (
+                  <div className="space-y-2">
+                    {strengths.map((s) => (
+                      <div key={s.label}>
+                        <div className="mb-0.5 flex items-center justify-between text-[12px]">
+                          <span className="text-[var(--muted-foreground)]">{s.label}</span>
+                          <span className={s.accuracy >= 70 ? "text-emerald-600" : s.accuracy >= 40 ? "text-amber-600" : "text-red-500"}>
+                            {s.accuracy}%
+                          </span>
                         </div>
-                      ))}
-                    </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--muted)]">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              s.accuracy >= 70 ? "bg-emerald-500" : s.accuracy >= 40 ? "bg-amber-500" : "bg-red-500"
+                            }`}
+                            style={{ width: `${s.accuracy}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                )}
-                {subjectAccuracy.length > 0 && (
-                  <div className="rounded-xl border border-[var(--border)] p-4">
-                    <h3 className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[var(--foreground)]">
-                      <BookOpen size={14} className="text-[var(--muted-foreground)]" />
-                      {t("Knowledge by Subject")}
-                    </h3>
-                    <div className="space-y-2">
-                      {subjectAccuracy.map((s) => (
-                        <Link
-                          key={s.id}
-                          href="/chat"
-                          className="group flex items-center justify-between rounded-lg px-2 py-1.5 text-[12px] transition-colors hover:bg-[var(--muted)]/50"
-                        >
-                          <span className="text-[var(--foreground)]">
-                            {s.id.charAt(0).toUpperCase() + s.id.slice(1)}
-                          </span>
-                          <span className="text-[var(--muted-foreground)] group-hover:text-[var(--foreground)]">
-                            {s.accuracy}% · {s.sessions} {t("sessions")} · {s.quizzes} {t("quizzes")}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
+                ) : (
+                  <p className="text-[12px] italic text-[var(--muted-foreground)]/60">
+                    {t("Take quizzes to see your strengths and weaknesses.")}
+                  </p>
                 )}
               </div>
-            )}
+              <div className="rounded-xl border border-[var(--border)] p-4">
+                <h3 className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[var(--foreground)]">
+                  <BookOpen size={14} className="text-[var(--muted-foreground)]" />
+                  {t("Knowledge by Subject")}
+                </h3>
+                {subjectAccuracy.length > 0 ? (
+                  <div className="space-y-2">
+                    {subjectAccuracy.map((s) => (
+                      <Link
+                        key={s.id}
+                        href="/chat"
+                        className="group flex items-center justify-between rounded-lg px-2 py-1.5 text-[12px] transition-colors hover:bg-[var(--muted)]/50"
+                      >
+                        <span className="text-[var(--foreground)]">
+                          {s.id.charAt(0).toUpperCase() + s.id.slice(1)}
+                        </span>
+                        <span className="text-[var(--muted-foreground)] group-hover:text-[var(--foreground)]">
+                          {s.accuracy}% &middot; {s.sessions} {t("sessions")} &middot; {s.quizzes} {t("quizzes")}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[12px] italic text-[var(--muted-foreground)]/60">
+                    {t("Study different subjects to see your knowledge breakdown.")}
+                  </p>
+                )}
+              </div>
+            </div>
 
             {/* ── Activity Chart ── */}
-            {data.activity.daily.some((d) => d.sessions > 0) && (
-              <div className="mb-6 rounded-xl border border-[var(--border)] p-5">
-                <Link href="/chat" className="group flex items-center justify-between">
-                  <h3 className="mb-4 text-[14px] font-semibold text-[var(--foreground)]">
-                    {t("Weekly Activity")}
-                  </h3>
-                  <ArrowRight size={13} className="text-[var(--muted-foreground)]/40 opacity-0 transition-opacity group-hover:opacity-100" />
-                </Link>
+            <div className="mb-6 rounded-xl border border-[var(--border)] p-5">
+              <Link href="/chat" className="group flex items-center justify-between">
+                <h3 className="mb-4 text-[14px] font-semibold text-[var(--foreground)]">
+                  {t("Weekly Activity")}
+                </h3>
+                <ArrowRight size={13} className="text-[var(--muted-foreground)]/40 opacity-0 transition-opacity group-hover:opacity-100" />
+              </Link>
+              {data.activity.daily.some((d) => d.sessions > 0) ? (
                 <div className="h-48">
                   <Bar data={activityChart} options={{
                     responsive: true, maintainAspectRatio: false,
@@ -272,30 +283,40 @@ export default function LearnerDashboard() {
                     scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { ticks: {} } },
                   }} />
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="py-8 text-center text-[12px] italic text-[var(--muted-foreground)]/60">
+                  {t("Start chatting to see your weekly activity.")}
+                </p>
+              )}
+            </div>
 
             {/* ── Quiz + Subject Charts ── */}
             <div className="mb-6 grid gap-4 sm:grid-cols-2">
-              {data.quiz.total > 0 && (
-                <div className="rounded-xl border border-[var(--border)] p-5">
-                  <Link href="/learner-notes" className="group flex items-center justify-between">
-                    <h3 className="mb-3 text-[14px] font-semibold text-[var(--foreground)]">
-                      {t("Quiz Accuracy")}
-                    </h3>
-                    <ArrowRight size={13} className="text-[var(--muted-foreground)]/40 opacity-0 transition-opacity group-hover:opacity-100" />
-                  </Link>
-                  <div className="mx-auto h-44 w-44">
-                    <Doughnut data={quizChart} options={{
-                      responsive: true, maintainAspectRatio: false,
-                      plugins: { legend: { position: "bottom" } },
-                    }} />
-                  </div>
-                  <div className="mt-2 text-center text-[12px] text-[var(--muted-foreground)]">
-                    {data.quiz.correct}/{data.quiz.total} {t("correct")} ({data.quiz.accuracy}%)
-                  </div>
-                </div>
-              )}
+              <div className="rounded-xl border border-[var(--border)] p-5">
+                <Link href="/learner-notes" className="group flex items-center justify-between">
+                  <h3 className="mb-3 text-[14px] font-semibold text-[var(--foreground)]">
+                    {t("Quiz Accuracy")}
+                  </h3>
+                  <ArrowRight size={13} className="text-[var(--muted-foreground)]/40 opacity-0 transition-opacity group-hover:opacity-100" />
+                </Link>
+                {data.quiz.total > 0 ? (
+                  <>
+                    <div className="mx-auto h-44 w-44">
+                      <Doughnut data={quizChart} options={{
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: "bottom" } },
+                      }} />
+                    </div>
+                    <div className="mt-2 text-center text-[12px] text-[var(--muted-foreground)]">
+                      {data.quiz.correct}/{data.quiz.total} {t("correct")} ({data.quiz.accuracy}%)
+                    </div>
+                  </>
+                ) : (
+                  <p className="py-8 text-center text-[12px] italic text-[var(--muted-foreground)]/60">
+                    {t("Complete quizzes to see your accuracy.")}
+                  </p>
+                )}
+              </div>
               {subjectData.length > 0 && (
                 <div className="rounded-xl border border-[var(--border)] p-5">
                   <h3 className="mb-3 text-[14px] font-semibold text-[var(--foreground)]">
@@ -311,6 +332,19 @@ export default function LearnerDashboard() {
                 </div>
               )}
             </div>
+
+            {/* ── Open Questions ── */}
+            {data.summary.open_questions && (
+              <div className="mt-6 rounded-xl border border-[var(--border)] p-4">
+                <h3 className="mb-2 flex items-center gap-2 text-[13px] font-semibold text-[var(--foreground)]">
+                  <XCircle size={14} className="text-[var(--muted-foreground)]" />
+                  {t("Open Questions")}
+                </h3>
+                <p className="text-[12px] leading-relaxed text-[var(--muted-foreground)]">
+                  {data.summary.open_questions}
+                </p>
+              </div>
+            )}
 
             {/* ── Books ── */}
             {data.books.length > 0 && (
