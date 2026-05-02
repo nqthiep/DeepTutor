@@ -1340,5 +1340,20 @@
   "subject.chemistry": "Chemistry",
   "subject.literature": "Literature",
   "subject.english": "English",
-  "subject.subject": "Subject"
+  "subject.subject": "Subject",
+  "My Learning Dashboard": "My Learning Dashboard",
+  "Your learning journey at a glance": "Your learning journey at a glance",
+  "Sessions": "Sessions",
+  "This Week": "This Week",
+  "Accuracy": "Accuracy",
+  "Messages": "Messages",
+  "Quiz Accuracy": "Quiz Accuracy",
+  "By Subject": "By Subject",
+  "Current Focus": "Current Focus",
+  "Accomplishments": "Accomplishments",
+  "pages": "pages",
+  "Quiz": "Quiz",
+  "correct": "correct",
+  "Start learning to see your dashboard!": "Start learning to see your dashboard!",
+  "Chat with AI, take quizzes, or read books to track your progress.": "Chat with AI, take quizzes, or read books to track your progress."
 }

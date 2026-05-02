@@ -21,6 +21,7 @@ import {
   Plus,
   Settings,
   Shield,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -47,6 +48,7 @@ const PRIMARY_NAV: NavEntry[] = [
 ];
 
 const LEARNER_NAV: NavEntry[] = [
+  { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/book", label: "Books", icon: Library },
   { href: "/learner-notes", label: "Notes", icon: NotebookPen },
