@@ -297,6 +297,9 @@ class PathService:
     def get_book_data_dir(self, book_id: str, user_id: str = "") -> Path:
         return self.get_book_dir(user_id=user_id) / f"book_{book_id}"
 
+    def get_book_root(self, book_id: str) -> Path:
+        return self.get_book_data_dir(book_id)
+
     def get_book_manifest_file(self, book_id: str) -> Path:
         return self.get_book_root(book_id) / "manifest.json"
 
