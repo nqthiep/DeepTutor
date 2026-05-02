@@ -5,16 +5,21 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 /**
- * Root page now redirects to /chat.
+ * Root page now redirects learners to /dashboard, others to /chat.
  * Handles backward compatibility for /?session=xxx URLs.
  * Waits for auth to resolve before redirecting.
  */
 export default function HomePage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isLearner } = useAuth();
 
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
+
+    if (isLearner) {
+      router.replace("/dashboard");
+      return;
+    }
 
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session");
@@ -29,7 +34,7 @@ export default function HomePage() {
     if (query.length) target += `?${query.join("&")}`;
 
     router.replace(target);
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, isLearner, router]);
 
   return null;
 }
