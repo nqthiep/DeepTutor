@@ -12,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLearner } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -22,8 +22,10 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) router.push("/chat");
-  }, [isAuthenticated, router]);
+    if (isAuthenticated) {
+      router.push(isLearner ? "/dashboard" : "/chat");
+    }
+  }, [isAuthenticated, isLearner, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
