@@ -12,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterPage() {
   const { t } = useTranslation();
-  const { register, isAuthenticated } = useAuth();
+  const { register, isAuthenticated, isLearner, needsOnboarding } = useAuth();
   const router = useRouter();
 
   const [displayName, setDisplayName] = useState("");
@@ -23,8 +23,14 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) router.push("/chat");
-  }, [isAuthenticated, router]);
+    if (isAuthenticated) {
+      if (needsOnboarding) {
+        router.push("/onboarding");
+      } else {
+        router.push(isLearner ? "/my-learning" : "/chat");
+      }
+    }
+  }, [isAuthenticated, isLearner, needsOnboarding, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

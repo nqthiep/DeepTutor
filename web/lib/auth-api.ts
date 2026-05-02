@@ -6,6 +6,7 @@ export interface User {
   display_name: string;
   role: string;
   is_active: boolean;
+  onboarding_completed: boolean;
   created_at: number;
   updated_at: number;
 }
@@ -291,4 +292,54 @@ export async function updateUserRole(
     throw new Error(err.detail ?? "Request failed");
   }
   return res.json();
+}
+
+// ─── Onboarding endpoints ───────────────────────────────────────────
+
+export interface OnboardingStatus {
+  onboarding_completed: boolean;
+  has_profile: boolean;
+}
+
+export async function getOnboardingStatus(
+  accessToken: string,
+): Promise<OnboardingStatus> {
+  const res = await fetch(apiUrl("/api/v1/auth/onboarding-status"), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    throw new Error("Failed to check onboarding status");
+  }
+  return res.json();
+}
+
+export interface OnboardingData {
+  language: string;
+  age: string;
+  grade: string;
+  purpose: string;
+  expectations: string;
+  current_level: string;
+  learning_style: string;
+  topics_of_interest: string;
+  time_commitment: string;
+  background: string;
+}
+
+export async function submitOnboarding(
+  data: OnboardingData,
+  accessToken: string,
+): Promise<void> {
+  const res = await fetch(apiUrl("/api/v1/auth/onboarding"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? "Failed to submit onboarding");
+  }
 }

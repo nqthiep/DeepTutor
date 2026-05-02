@@ -35,6 +35,7 @@ interface AuthContextValue {
   isAdmin: boolean;
   isManager: boolean;
   isLearner: boolean;
+  needsOnboarding: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (
     email: string,
@@ -155,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAdmin = currentRole === "administrator";
   const isManager = currentRole === "manager";
   const isLearner = currentRole === "learner";
+  const needsOnboarding = isLearner && user?.onboarding_completed === false;
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -165,6 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAdmin,
       isManager,
       isLearner,
+      needsOnboarding,
       login,
       register,
       logout,
@@ -173,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       getAccessToken,
       refreshUser,
     }),
-    [user, isLoading, login, register, logout, forgotPassword, resetPassword, getAccessToken, refreshUser, currentRole, isAdmin, isManager, isLearner],
+    [user, isLoading, login, register, logout, forgotPassword, resetPassword, getAccessToken, refreshUser, currentRole, isAdmin, isManager, isLearner, needsOnboarding],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

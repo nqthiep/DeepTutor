@@ -11,10 +11,15 @@ import { useAuth } from "@/context/AuthContext";
  */
 export default function HomePage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading, isLearner } = useAuth();
+  const { isAuthenticated, isLoading, isLearner, needsOnboarding } = useAuth();
 
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
+
+    if (needsOnboarding) {
+      router.replace("/onboarding");
+      return;
+    }
 
     if (isLearner) {
       router.replace("/my-learning");
@@ -34,7 +39,7 @@ export default function HomePage() {
     if (query.length) target += `?${query.join("&")}`;
 
     router.replace(target);
-  }, [isLoading, isAuthenticated, isLearner, router]);
+  }, [isLoading, isAuthenticated, isLearner, needsOnboarding, router]);
 
   return null;
 }
