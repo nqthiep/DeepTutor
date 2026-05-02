@@ -226,9 +226,9 @@ class SQLiteSessionStore:
         }
 
     async def create_session(
-        self, title: str | None = None, session_id: str | None = None
+        self, title: str | None = None, session_id: str | None = None, user_id: str | None = None
     ) -> dict[str, Any]:
-        return await self._run(self._create_session_sync, title, session_id)
+        return await self._run(self._create_session_sync, title, session_id, user_id)
 
     def _get_session_sync(self, session_id: str) -> dict[str, Any] | None:
         with self._connect() as conn:
