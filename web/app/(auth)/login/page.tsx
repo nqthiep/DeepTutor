@@ -23,7 +23,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push(isLearner ? "/dashboard" : "/chat");
+      router.push(isLearner ? "/my-learning" : "/chat");
     }
   }, [isAuthenticated, isLearner, router]);
 

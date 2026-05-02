@@ -17,7 +17,7 @@ export default function HomePage() {
     if (isLoading || !isAuthenticated) return;
 
     if (isLearner) {
-      router.replace("/dashboard");
+      router.replace("/my-learning");
       return;
     }
 
