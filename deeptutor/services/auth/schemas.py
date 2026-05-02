@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, EmailStr, field_validator
-
+from pydantic import BaseModel, field_validator
 
 VALID_ROLES = {"administrator", "manager", "learner"}
 
@@ -12,6 +11,7 @@ class UserOut(BaseModel):
     display_name: str
     role: str = "learner"
     is_active: bool
+    onboarding_completed: bool = False
     created_at: float
     updated_at: float
 
@@ -139,3 +139,42 @@ class AdminUpdateUserRequest(BaseModel):
         if v is not None and v not in VALID_ROLES:
             raise ValueError(f"Invalid role. Must be one of: {', '.join(sorted(VALID_ROLES))}")
         return v
+
+
+# ─── Onboarding Schemas ─────────────────────────────────────────────
+
+
+class OnboardingRequest(BaseModel):
+    language: str = ""
+    age: str = ""
+    grade: str = ""
+    purpose: str = ""
+    expectations: str = ""
+    current_level: str = ""
+    learning_style: str = ""
+    topics_of_interest: str = ""
+    time_commitment: str = ""
+    background: str = ""
+
+
+class OnboardingStatusResponse(BaseModel):
+    onboarding_completed: bool
+    has_profile: bool
+
+
+class LearnerProfileOut(BaseModel):
+    id: str
+    user_id: str
+    language: str
+    age: str = ""
+    grade: str = ""
+    purpose: str
+    expectations: str
+    current_level: str
+    learning_style: str
+    topics_of_interest: str
+    time_commitment: str
+    background: str
+    completed_at: float
+    created_at: float
+    updated_at: float

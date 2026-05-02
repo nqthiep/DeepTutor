@@ -4,7 +4,6 @@ import sqlite3
 import time
 import uuid
 
-from deeptutor.services.path_service import get_path_service
 from deeptutor.services.session.sqlite_store import get_sqlite_session_store
 
 
@@ -92,6 +91,51 @@ class AuthStore:
             if "user_id" not in nc_columns:
                 conn.execute(
                     "ALTER TABLE notebook_categories ADD COLUMN user_id TEXT DEFAULT ''"
+                )
+
+            # Migrate: add onboarding_completed to users if missing
+            if "onboarding_completed" not in user_columns:
+                conn.execute(
+                    "ALTER TABLE users ADD COLUMN onboarding_completed INTEGER NOT NULL DEFAULT 0"
+                )
+
+            # Create learner_profile table
+            conn.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS learner_profile (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+                    language TEXT NOT NULL DEFAULT '',
+                    purpose TEXT NOT NULL DEFAULT '',
+                    expectations TEXT NOT NULL DEFAULT '',
+                    current_level TEXT NOT NULL DEFAULT '',
+                    learning_style TEXT NOT NULL DEFAULT '',
+                    topics_of_interest TEXT NOT NULL DEFAULT '',
+                    time_commitment TEXT NOT NULL DEFAULT '',
+                    background TEXT NOT NULL DEFAULT '',
+                    completed_at REAL NOT NULL,
+                    created_at REAL NOT NULL,
+                    updated_at REAL NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_learner_profile_user
+                    ON learner_profile(user_id);
+                """
+            )
+            # Migrate: add language column to learner_profile if missing
+            lp_columns = {
+                row[1] for row in conn.execute("PRAGMA table_info(learner_profile)").fetchall()
+            }
+            if "language" not in lp_columns:
+                conn.execute(
+                    "ALTER TABLE learner_profile ADD COLUMN language TEXT NOT NULL DEFAULT ''"
+                )
+            if "age" not in lp_columns:
+                conn.execute(
+                    "ALTER TABLE learner_profile ADD COLUMN age TEXT NOT NULL DEFAULT ''"
+                )
+            if "grade" not in lp_columns:
+                conn.execute(
+                    "ALTER TABLE learner_profile ADD COLUMN grade TEXT NOT NULL DEFAULT ''"
                 )
             conn.commit()
 
@@ -394,6 +438,82 @@ class AuthStore:
             )
             conn.commit()
 
+    # ─── Onboarding ─────────────────────────────────────────────────────────
+
+    def get_onboarding_status(self, user_id: str) -> dict:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT onboarding_completed FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+        return {
+            "onboarding_completed": bool(row["onboarding_completed"]) if row else False,
+            "has_profile": self.get_learner_profile(user_id) is not None,
+        }
+
+    def complete_onboarding(self, user_id: str, profile_data: dict) -> dict:
+        now = time.time()
+        profile_id = uuid.uuid4().hex
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE users SET onboarding_completed = 1, updated_at = ? WHERE id = ?",
+                (now, user_id),
+            )
+            conn.execute(
+                """
+                INSERT INTO learner_profile (
+                    id, user_id, language, age, grade, purpose, expectations, current_level,
+                    learning_style, topics_of_interest, time_commitment,
+                    background, completed_at, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    profile_id,
+                    user_id,
+                    profile_data.get("language", ""),
+                    profile_data.get("age", ""),
+                    profile_data.get("grade", ""),
+                    profile_data.get("purpose", ""),
+                    profile_data.get("expectations", ""),
+                    profile_data.get("current_level", ""),
+                    profile_data.get("learning_style", ""),
+                    profile_data.get("topics_of_interest", ""),
+                    profile_data.get("time_commitment", ""),
+                    profile_data.get("background", ""),
+                    now,
+                    now,
+                    now,
+                ),
+            )
+            conn.commit()
+        return self.get_learner_profile(user_id) or {}
+
+    def get_learner_profile(self, user_id: str) -> dict | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM learner_profile WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "id": row["id"],
+            "user_id": row["user_id"],
+            "language": row["language"] if "language" in row.keys() else "",
+            "age": row["age"] if "age" in row.keys() else "",
+            "grade": row["grade"] if "grade" in row.keys() else "",
+            "purpose": row["purpose"],
+            "expectations": row["expectations"],
+            "current_level": row["current_level"],
+            "learning_style": row["learning_style"],
+            "topics_of_interest": row["topics_of_interest"],
+            "time_commitment": row["time_commitment"],
+            "background": row["background"],
+            "completed_at": float(row["completed_at"]),
+            "created_at": float(row["created_at"]),
+            "updated_at": float(row["updated_at"]),
+        }
+
     # ─── Serialization ───────────────────────────────────────────────────────
 
     @staticmethod
@@ -404,6 +524,7 @@ class AuthStore:
             "display_name": str(row.get("display_name", "")),
             "role": str(row.get("role", "learner")),
             "is_active": bool(row.get("is_active", True)),
+            "onboarding_completed": bool(row.get("onboarding_completed", False)),
             "created_at": float(row["created_at"]),
             "updated_at": float(row["updated_at"]),
         }

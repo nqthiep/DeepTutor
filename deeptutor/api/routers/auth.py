@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import time
-from datetime import timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
@@ -15,7 +14,10 @@ from deeptutor.services.auth.schemas import (
     AdminUpdateUserRequest,
     ChangePasswordRequest,
     ForgotPasswordRequest,
+    LearnerProfileOut,
     LoginRequest,
+    OnboardingRequest,
+    OnboardingStatusResponse,
     RefreshRequest,
     RegisterRequest,
     ResetPasswordRequest,
@@ -26,7 +28,6 @@ from deeptutor.services.auth.store import AuthStore, get_auth_store
 from deeptutor.services.auth.tokens import (
     create_access_token,
     create_refresh_token,
-    decode_token,
     hash_token,
 )
 
@@ -210,6 +211,90 @@ async def change_own_password(
     store.update_password(user["id"], hash_password(body.new_password))
     store.delete_user_refresh_tokens(user["id"])
     return {"message": "Password changed successfully"}
+
+
+# ─── Onboarding endpoints ──────────────────────────────────────────
+
+
+@router.get("/onboarding-status", response_model=OnboardingStatusResponse)
+async def get_onboarding_status(
+    user: dict = Depends(get_current_user),
+    store: AuthStore = Depends(get_auth_store),
+):
+    return store.get_onboarding_status(user["id"])
+
+
+@router.post("/onboarding", response_model=LearnerProfileOut)
+async def complete_onboarding(
+    body: OnboardingRequest,
+    user: dict = Depends(get_current_user),
+    store: AuthStore = Depends(get_auth_store),
+):
+    profile = store.complete_onboarding(user["id"], body.model_dump())
+    # Write onboarding data to memory for AI agents to use
+    try:
+        from deeptutor.services.memory import get_memory_service
+        mem_svc = get_memory_service(user_id=user["id"])
+        _write_onboarding_to_memory(mem_svc, body)
+    except Exception:
+        pass
+    return profile
+
+
+def _write_onboarding_to_memory(mem_svc, body: OnboardingRequest) -> None:
+    """Format onboarding data into PROFILE.md + SUMMARY.md for AI agent consumption."""
+    interests = body.topics_of_interest.strip() or "various subjects"
+    grade_info = ""
+    if body.grade or body.age:
+        parts = []
+        if body.grade:
+            parts.append(f"Grade: {body.grade}")
+        if body.age:
+            parts.append(f"Age: {body.age}")
+        grade_info = " (" + ", ".join(parts) + ")" if parts else ""
+
+    profile_md = (
+        "## Identity\n"
+        f"- Learning Goal: {body.purpose or 'Learning and self-improvement'}\n"
+        f"- Background: {body.background or 'Not specified'}\n"
+        f"- Areas of Interest: {interests}\n"
+        f"- Student Info: Vietnamese K-12 student{grade_info}\n"
+        "\n"
+        f"## Learning Style\n"
+        f"{body.learning_style or 'Not specified yet'}\n"
+        "\n"
+        f"## Knowledge Level\n"
+        f"{body.current_level or 'Not assessed yet'}\n"
+        "\n"
+        "## Preferences\n"
+        f"- Language: {body.language or 'en'}\n"
+        f"- Expectations: {body.expectations or 'Not specified'}\n"
+        f"- Time Commitment: {body.time_commitment or 'Not specified'}\n"
+    )
+    mem_svc.write_file("profile", profile_md)
+
+    summary_md = (
+        "## Current Focus\n"
+        f"Getting started with DeepTutor. Exploring topics in {interests}.\n"
+        "\n"
+        "## Accomplishments\n"
+        "- Completed onboarding and set up learning profile\n"
+        "\n"
+        "## Open Questions\n"
+        "None yet. Ready to start learning!\n"
+    )
+    mem_svc.write_file("summary", summary_md)
+
+
+@router.get("/onboarding", response_model=LearnerProfileOut)
+async def get_onboarding_profile(
+    user: dict = Depends(get_current_user),
+    store: AuthStore = Depends(get_auth_store),
+):
+    profile = store.get_learner_profile(user["id"])
+    if profile is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Onboarding profile not found")
+    return profile
 
 
 # ─── Admin-only endpoints ─────────────────────────────────────────────
