@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   BookOpen,
   Brain,
@@ -90,12 +91,15 @@ async function readMemoryResponse(res: Response): Promise<MemoryApiData> {
 export default function MemorySection() {
   const { t } = useTranslation();
   const { activeSessionId, language } = useAppShell();
+  const searchParams = useSearchParams();
   const [data, setData] = useState<MemoryData>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<MemoryFile>("summary");
+  const [activeTab, setActiveTab] = useState<MemoryFile>(
+    searchParams.get("tab") === "profile" ? "profile" : "summary",
+  );
   const [activeView, setActiveView] = useState<"edit" | "preview">("edit");
   const [editors, setEditors] = useState<Record<MemoryFile, string>>({
     summary: "",

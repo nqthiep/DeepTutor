@@ -159,7 +159,7 @@ export default function LearnerDashboard() {
             {/* ── Learning Goals & Profile ── */}
             <div className="mb-6 grid gap-4 sm:grid-cols-2">
               <Link
-                href="/space/memory"
+                href="/space/memory?tab=profile"
                 className="group rounded-xl border border-[var(--border)] p-4 transition-colors hover:border-[var(--border)]/80 hover:bg-[var(--muted)]/30"
               >
                 <div className="mb-2 flex items-center gap-2">
@@ -168,16 +168,26 @@ export default function LearnerDashboard() {
                   <ArrowRight size={12} className="ml-auto text-[var(--muted-foreground)]/40 opacity-0 transition-opacity group-hover:opacity-100" />
                 </div>
                 {data.profile.identity ? (
-                  <>
-                    <p className="mb-1 text-[12px] leading-relaxed text-[var(--muted-foreground)]">
+                  <div className="space-y-1.5">
+                    <p className="text-[12px] leading-relaxed text-[var(--muted-foreground)]">
                       <span className="font-medium text-[var(--foreground)]">{t("Identity")}:</span> {data.profile.identity}
                     </p>
-                    {data.profile.knowledge_level && (
-                      <p className="mb-1 text-[12px] leading-relaxed text-[var(--muted-foreground)]">
+                    {data.profile.learning_style && data.profile.learning_style !== "Not specified yet" && (
+                      <p className="text-[12px] leading-relaxed text-[var(--muted-foreground)]">
+                        <span className="font-medium text-[var(--foreground)]">{t("onboarding.learning_style.title")}:</span> {data.profile.learning_style}
+                      </p>
+                    )}
+                    {data.profile.knowledge_level && data.profile.knowledge_level !== "Not assessed yet" && (
+                      <p className="text-[12px] leading-relaxed text-[var(--muted-foreground)]">
                         <span className="font-medium text-[var(--foreground)]">{t("Level")}:</span> {data.profile.knowledge_level}
                       </p>
                     )}
-                  </>
+                    {data.profile.preferences && (
+                      <p className="text-[12px] leading-relaxed text-[var(--muted-foreground)]">
+                        <span className="font-medium text-[var(--foreground)]">{t("onboarding.preferences")}:</span> {data.profile.preferences}
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-[12px] italic text-[var(--muted-foreground)]/60">
                     {t("Set your learning goals in Memory")}
